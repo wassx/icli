@@ -94,12 +94,15 @@ The CLI now supports real iCloud data access through Apple ID authentication wit
 - **Demo mode**: Full functionality with mock data
 
 ### Security Enhancements
+- **Password security**: Hidden input using getpass module
 - **Read-only mode**: No write operations possible
 - **Secure credential handling**: Optional keyring integration
 - **Input validation**: Email format and password length checks
 - **2FA guidance**: Clear instructions for verification codes
 - **Privacy information**: Transparent data access policies
 - **Session monitoring**: Trusted device status indicators
+- **Professional interface**: Reduced emojis, clear messaging
+- **Error handling**: Graceful fallback and recovery options
 
 ### User Flow
 
