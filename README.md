@@ -73,23 +73,71 @@ icli/
 └── setup.py               # Package configuration
 ```
 
-## 🔐 Authentication
+## 🔐 Authentication & UX
 
-The CLI now supports real iCloud data access through Apple ID authentication.
+The CLI now supports real iCloud data access through Apple ID authentication with a focus on user experience and safety.
 
 ### Authentication Features
 - **Secure login**: Apple ID + password with optional keyring storage
-- **Two-factor authentication**: Full 2FA support
+- **Two-factor authentication**: Full 2FA support with clear guidance
 - **Session management**: Persistent sessions with trusted device support
 - **Graceful fallback**: Automatic switch to mock data if authentication fails
+- **Immediate redirection**: Automatic auth prompt when accessing services
+- **Contextual menus**: Different options based on authentication status
 
-### How to Authenticate
+### UX Improvements
+- **Welcome screen**: Clear welcome message with current mode indication
+- **Guided authentication**: Step-by-step login process with validation
+- **Helpful information**: Contextual help and security reassurance
+- **Clear feedback**: Visual indicators for authentication status
+- **Recovery options**: Easy ways to continue if login fails
+- **Demo mode**: Full functionality with mock data
+
+### Security Enhancements
+- **Read-only mode**: No write operations possible
+- **Secure credential handling**: Optional keyring integration
+- **Input validation**: Email format and password length checks
+- **2FA guidance**: Clear instructions for verification codes
+- **Privacy information**: Transparent data access policies
+- **Session monitoring**: Trusted device status indicators
+
+### User Flow
+
+#### First Time Users
+1. **Welcome screen** shows current mode (Demo)
+2. **Select any service** (Mail, Calendar, Drive)
+3. **Authentication prompt** appears automatically
+4. **Choose option**: Login, Demo mode, or Exit
+5. **If login**: Enter credentials and complete 2FA
+6. **If demo mode**: Continue with mock data
+
+#### Returning Users
+1. **Welcome screen** shows authentication status
+2. **Direct access** to services if already logged in
+3. **Seamless experience** with saved credentials (optional)
+4. **Easy logout** from authentication menu
+
+#### Authentication Process
 1. Run `python main.py`
-2. Select "Authentication" from the main menu
-3. Choose "Login"
-4. Enter your Apple ID and password
-5. Complete 2FA if required
-6. Access real iCloud data from all modules
+2. Select "Authentication" from main menu OR
+3. Select any service to trigger auto-auth prompt
+4. Choose "Login to iCloud"
+5. Enter Apple ID (validated for email format)
+6. Enter password (validated for minimum length)
+7. Complete 2FA with clear instructions
+8. Access real iCloud data automatically
+
+### Authentication Menu Options
+
+**When Not Logged In:**
+- 🔓 **Login to iCloud**: Full authentication process
+- ❓ **About authentication**: Security and process information
+- ⬅️ **Back to main menu**: Return to main menu
+
+**When Logged In:**
+- 🔒 **Logout**: Securely end session
+- 📋 **Account info**: Session details and data access
+- ⬅️ **Back to main menu**: Return to main menu
 
 ### Security Notes
 - Passwords are securely stored using system keyring (optional)
