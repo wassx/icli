@@ -9,41 +9,48 @@ A command-line interface for interacting with iCloud services including Mail, Ca
 git clone https://github.com/wassx/icli.git
 cd icli
 
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies (for real iCloud data)
+pip install pyicloud keyring requests
 
-# Quick demo (non-interactive)
+# Quick demo (non-interactive, uses mock data)
 python quickstart.py
 
-# Interactive CLI (requires user input)
+# Interactive CLI with real data support
 python main.py
+
+# Test real data integration
+python test_real_data_simple.py
 
 # Read-only functionality demo
 python demo_readonly.py
 ```
 
-**Note**: `python main.py` requires interactive input. Use `python quickstart.py` for a non-interactive demonstration of all features.
+**Note**: For real iCloud data, install dependencies first. The CLI will automatically fall back to mock data if authentication fails or dependencies are missing.
 
 ## 📋 Features
 
-### Mail Module ✅ (Read-Only)
+### Mail Module ✅ (Read-Only with Real Data Support)
 - **Unread Email Overview**: Quick summary of unread emails with sender, subject, date, and preview
 - **Email Detail View**: Full email content with proper formatting
+- **Real Data Integration**: Loads emails from actual iCloud account (with authentication)
+- **Mock Data Fallback**: Uses sample data when not authenticated or for testing
 - **Email Management**: Mark as read only (reply, forward, delete disabled)
 - **Send Email**: Disabled in read-only mode
 - **Security Focus**: No write operations to protect email integrity
 
-### Calendar Module 🚧
-- List upcoming events
-- Create new events
-- Edit/delete existing events
-- Calendar selection support
+### Calendar Module 🚧 (Real Data Ready)
+- **List upcoming events**: From actual iCloud calendar (with authentication)
+- **Mock data fallback**: Sample events when not authenticated
+- Create new events (planned)
+- Edit/delete existing events (planned)
+- Calendar selection support (planned)
 
-### iCloud Drive Module 🚧
-- File listing with pagination
-- Upload/download files
-- File metadata display
-- Folder navigation
+### iCloud Drive Module 🚧 (Real Data Ready)
+- **File listing**: From actual iCloud Drive (with authentication)
+- **Mock data fallback**: Sample file structure when not authenticated
+- Upload/download files (planned)
+- File metadata display (planned)
+- Folder navigation (planned)
 
 ## 📂 Project Structure
 
@@ -66,6 +73,29 @@ icli/
 └── setup.py               # Package configuration
 ```
 
+## 🔐 Authentication
+
+The CLI now supports real iCloud data access through Apple ID authentication.
+
+### Authentication Features
+- **Secure login**: Apple ID + password with optional keyring storage
+- **Two-factor authentication**: Full 2FA support
+- **Session management**: Persistent sessions with trusted device support
+- **Graceful fallback**: Automatic switch to mock data if authentication fails
+
+### How to Authenticate
+1. Run `python main.py`
+2. Select "Authentication" from the main menu
+3. Choose "Login"
+4. Enter your Apple ID and password
+5. Complete 2FA if required
+6. Access real iCloud data from all modules
+
+### Security Notes
+- Passwords are securely stored using system keyring (optional)
+- No write operations are performed (read-only mode)
+- All sensitive data is handled securely
+
 ## 🎯 Usage
 
 ### Main Menu
@@ -74,7 +104,7 @@ icli/
 1) Mail
 2) Calendar
 3) iCloud Drive
-4) Other
+4) Authentication  ← New!
 5) Exit
 ```
 
