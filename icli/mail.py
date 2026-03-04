@@ -4,13 +4,12 @@ class MailModule:
     def __init__(self, auth=None):
         self.auth = auth
         self.unread_emails = []
-        self._use_real_data = True  # Set to False to use mock data for testing
+        self._use_real_data = True  # Always use real data (demo mode removed)
     
     def _load_real_emails(self):
         """Load real emails from iCloud"""
         if not self.auth or not self.auth.is_authenticated():
-            print("Not authenticated. Using mock data.")
-            self._load_mock_emails()
+            print("❌ Not authenticated. Please log in to access your iCloud data.")
             return
         
         try:
@@ -37,38 +36,8 @@ class MailModule:
             print(f"Loaded {len(self.unread_emails)} unread emails from iCloud")
             
         except Exception as e:
-            print(f"Error loading real emails: {str(e)}")
-            print("Falling back to mock data")
-            self._load_mock_emails()
-    
-    def _load_mock_emails(self):
-        """Load mock data for testing"""
-        self.unread_emails = [
-            {
-                "id": 1,
-                "from": "Amazon <orders@amazon.com>",
-                "subject": "Your Amazon Order #123-4567890-1234567",
-                "date": "Today, 10:30 AM",
-                "preview": "Your order has been shipped and will arrive by Wednesday, March 10.",
-                "body": "Dear Customer,\n\nYour order #123-4567890-1234567 has been shipped via UPS Ground.\n\nItems:\n- Wireless Headphones (Black)\n- USB-C Cable (2m)\n\nTracking number: 1Z999AA10123456784\nEstimated delivery: Wednesday, March 10, 2023\n\nThank you for shopping with Amazon!"
-            },
-            {
-                "id": 2,
-                "from": "GitHub <notifications@github.com>",
-                "subject": "[github] New issue opened in your repository",
-                "date": "Today, 9:15 AM",
-                "preview": "User john-doe opened a new issue: Bug in login functionality",
-                "body": "New Issue Opened\n\nRepository: yourusername/awesome-project\nIssue #42: Bug in login functionality\nOpened by: john-doe\n\nDescription:\nWhen I try to login with special characters in the password, I get a 500 error.\n\nSteps to reproduce:\n1. Go to login page\n2. Enter username: testuser\n3. Enter password: P@ssw0rd!\n4. Click login\n\nExpected: Successful login\nActual: 500 Internal Server Error"
-            },
-            {
-                "id": 3,
-                "from": "Netflix <info@netflix.com>",
-                "subject": "Your Netflix membership",
-                "date": "Yesterday, 3:45 PM",
-                "preview": "Your membership will renew on March 15, 2023.",
-                "body": "Hello Stefan,\n\nYour Netflix membership will automatically renew on March 15, 2023 for $15.99.\n\nCurrent plan: Premium (4K Ultra HD)\nNext billing date: March 15, 2023\nPayment method: Visa •••• 1234\n\nYou can change or cancel your plan anytime at netflix.com/account."
-            }
-        ]
+            print(f"❌ Error loading real emails: {str(e)}")
+            print("   Please check your internet connection and try again.")
     
     def list_emails(self):
         """List unread emails with quick overview"""

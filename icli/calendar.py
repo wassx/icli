@@ -7,7 +7,7 @@ class CalendarModule:
     def list_events(self):
         """List upcoming calendar events"""
         if not self.auth or not self.auth.is_authenticated():
-            print("Not authenticated. Calendar functionality requires login.")
+            print("❌ Not authenticated. Please log in to access your iCloud calendar.")
             return
         
         # Check session activity
@@ -16,7 +16,7 @@ class CalendarModule:
         try:
             calendar_service = self.auth.get_calendar_service()
             if not calendar_service:
-                print("Calendar service not available")
+                print("❌ Calendar service not available")
                 return
             
             print("Loading events from iCloud...")
@@ -32,7 +32,8 @@ class CalendarModule:
                 print(f"{i}. {event.summary} - {event.start}")
             
         except Exception as e:
-            print(f"Error loading calendar events: {str(e)}")
+            print(f"❌ Error loading calendar events: {str(e)}")
+            print("   Please check your internet connection and try again.")
         
     def create_event(self, title, date, time):
         """Create a new calendar event"""

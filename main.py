@@ -29,8 +29,7 @@ def handle_menu_choice(choice, cli):
             print("4) Back to main menu")
         else:
             print("\n1) Login to iCloud")
-            print("2) About authentication")
-            print("3) Back to main menu")
+            print("2) Back to main menu")
         
         auth_choice = input("\nEnter your choice: ").strip()
         
@@ -81,21 +80,8 @@ def handle_menu_choice(choice, cli):
                 print("• Secure connection")
                 print("• Automatic reconnection")
             else:
-                # Show authentication info
-                print("\n=== About Authentication ===")
-                print("Secure Login Process:")
-                print("1. Enter your Apple ID and password")
-                print("2. Complete 2FA if enabled (recommended)")
-                print("3. Access your real iCloud data")
-                print("\nSecurity Features:")
-                print("• End-to-end encryption")
-                print("• No password storage (optional keyring)")
-                print("• Read-only access only")
-                print("• Session timeout protection")
-                print("\nData Access:")
-                print("• View emails, events, and files")
-                print("• No modifications possible")
-                print("• Full privacy protection")
+                print("\nPlease log in to access your iCloud data.")
+                print("Authentication is required for all features.")
         elif auth_choice == "3":
             if cli.auth.is_authenticated():
                 # Refresh session
@@ -159,30 +145,27 @@ def handle_menu_choice(choice, cli):
     return True
 
 def require_authentication(cli):
-    """Handle authentication requirement with better UX"""
-    print("\nAuthentication Required")
+    """Handle authentication requirement - demo mode removed"""
+    print("\n❌ Authentication Required")
     print("=" * 40)
     print("To access iCloud services, please log in first.")
     print("\n1) Login to iCloud")
-    print("2) Continue with demo mode (mock data)")
-    print("3) Exit")
+    print("2) Exit")
     
-    choice = input("\nEnter your choice (1-3): ").strip()
+    choice = input("\nEnter your choice (1-2): ").strip()
     
     if choice == "1":
         # Direct to login
         print("\n=== iCloud Login ===")
         if cli.auth.login():
-            print("\n✅ Login successful! You now have access to real iCloud data.")
+            print("\nLogin successful!")
+            print("   You now have access to your real iCloud data.")
+            print("   All modules will load data from your iCloud account.")
             return True
         else:
-            print("\n❌ Login failed. Continuing in demo mode.")
+            print("\nLogin cancelled or failed.")
             return False
     elif choice == "2":
-        print("\n🎭 Continuing in demo mode with sample data.")
-        print("   (No real iCloud data will be accessed)")
-        return False
-    elif choice == "3":
         print("\nGoodbye!")
         return False
     else:
@@ -206,12 +189,12 @@ def main():
         has_pyicloud = False
     
     if has_pyicloud:
-        print("Current mode: Ready for real iCloud data 🎉")
+        print("Current mode: Ready for real iCloud data")
         print("Note: Login to access your actual iCloud account")
     else:
-        print("Current mode: Demo (mock data)")
-        print("⚠️  Install 'pyicloud' for real iCloud access")
-        print("   Command: pip install pyicloud keyring")
+        print("❌ Dependencies required for real iCloud access")
+        print("   Install: pip install pyicloud keyring")
+        print("   All features require authentication")
     
     running = True
     
