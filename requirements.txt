@@ -1,0 +1,5 @@
+# iCloud CLI dependencies
+# Add any required packages here
+# For example:
+# pyicloud==x.x.x
+# requests==x.x.x
