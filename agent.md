@@ -325,7 +325,37 @@ python -m twine upload dist/*
 3. **Implement**: Write clean, documented code
 4. **Test**: Verify functionality works
 5. **Document**: Update relevant documentation
-6. **Review**: Check for improvements
+6. **Update README**: **MUST always update README.md** with new features, changes, or improvements
+7. **Review**: Check for improvements
+
+### README Update Requirements
+
+**MUST update README.md for every significant change including:**
+- New features or modules
+- Changed functionality
+- Removed features
+- Updated usage instructions
+- New dependencies
+- Changed project structure
+
+**README should always contain:**
+- Clear project description
+- Installation instructions
+- Usage examples
+- Feature list with status (✅/🚧)
+- Roadmap
+- Contribution guidelines
+- License information
+
+**Example README update process:**
+```bash
+# After implementing a feature
+git add src/new_feature.py
+git add test_new_feature.py
+# Update README with feature documentation
+git add README.md
+git commit -m "Add new feature with documentation"
+```
 
 ## Decision Making
 
