@@ -1,13 +1,36 @@
 """iCloud Drive module for iCloud CLI"""
 
 class DriveModule:
-    def __init__(self):
-        pass
+    def __init__(self, auth=None):
+        self.auth = auth
     
     def list_files(self, path="/"):
         """List files in iCloud Drive"""
-        print(f"Listing files in {path}...")
-        # TODO: Implement actual file listing
+        if not self.auth or not self.auth.is_authenticated():
+            print("Not authenticated. iCloud Drive functionality requires login.")
+            return
+        
+        try:
+            drive_service = self.auth.get_drive_service()
+            if not drive_service:
+                print("Drive service not available")
+                return
+            
+            print(f"Loading files from iCloud Drive ({path})...")
+            # Get files from specified path
+            files = drive_service.dir(path)
+            
+            if not files:
+                print("No files found in this directory.")
+                return
+            
+            print(f"Found {len(files)} items:")
+            for i, file in enumerate(files[:10], 1):  # Show first 10 files
+                file_type = "📁 Directory" if file.type == "FOLDER" else "📄 File"
+                print(f"{i}. {file_type} - {file.name} ({file.size} bytes)")
+            
+        except Exception as e:
+            print(f"Error loading files: {str(e)}")
         
     def upload_file(self, local_path, remote_path):
         """Upload a file to iCloud Drive"""

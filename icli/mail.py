@@ -1,8 +1,48 @@
 """Mail module for iCloud CLI"""
 
 class MailModule:
-    def __init__(self):
-        # Mock data for demonstration
+    def __init__(self, auth=None):
+        self.auth = auth
+        self.unread_emails = []
+        self._use_real_data = True  # Set to False to use mock data for testing
+    
+    def _load_real_emails(self):
+        """Load real emails from iCloud"""
+        if not self.auth or not self.auth.is_authenticated():
+            print("Not authenticated. Using mock data.")
+            self._load_mock_emails()
+            return
+        
+        try:
+            mail_service = self.auth.get_mail_service()
+            if not mail_service:
+                print("Mail service not available")
+                return
+            
+            # Get unread emails from inbox
+            inbox = mail_service.inbox
+            self.unread_emails = []
+            
+            for email in inbox:
+                if not email.read:
+                    self.unread_emails.append({
+                        "id": email.id,
+                        "from": email.sender,
+                        "subject": email.subject,
+                        "date": email.date.strftime("%Y-%m-%d %H:%M:%S"),
+                        "preview": email.preview,
+                        "body": email.plain_text_body if hasattr(email, 'plain_text_body') else ""
+                    })
+            
+            print(f"Loaded {len(self.unread_emails)} unread emails from iCloud")
+            
+        except Exception as e:
+            print(f"Error loading real emails: {str(e)}")
+            print("Falling back to mock data")
+            self._load_mock_emails()
+    
+    def _load_mock_emails(self):
+        """Load mock data for testing"""
         self.unread_emails = [
             {
                 "id": 1,
@@ -32,6 +72,10 @@ class MailModule:
     
     def list_emails(self):
         """List unread emails with quick overview"""
+        # Load real data if enabled
+        if self._use_real_data:
+            self._load_real_emails()
+        
         if not self.unread_emails:
             print("No unread emails.")
             return
