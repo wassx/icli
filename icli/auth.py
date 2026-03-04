@@ -35,34 +35,66 @@ class iCloudAuth:
         self.apple_id = None
     
     def login(self, apple_id=None, password=None, use_keyring=True):
-        """Authenticate with iCloud"""
+        """Authenticate with iCloud with improved UX"""
         try:
+            # Check if we already have credentials in keyring
             if use_keyring and apple_id and KEYRING_AVAILABLE:
-                # Try to get password from keyring
                 password = keyring.get_service("iCloudCLI", apple_id)
-                if not password:
+                if password:
+                    print("🔑 Found saved credentials. Logging in...")
+                else:
                     print("No saved password found in keyring")
+            
+            # Get Apple ID
+            if not apple_id:
+                print("\n📧 Apple ID:")
+                apple_id = input("   Enter your Apple ID email: ").strip()
+                if not apple_id:
+                    print("❌ Apple ID cannot be empty")
+                    return False
+                if "@" not in apple_id:
+                    print("❌ Please enter a valid email address")
                     return False
             
-            if not apple_id:
-                apple_id = input("Enter your Apple ID: ").strip()
-            
+            # Get password
             if not password:
-                password = input("Enter your password: ").strip()
+                print("\n🔒 Password:")
+                password = input("   Enter your password: ").strip()
+                if not password:
+                    print("❌ Password cannot be empty")
+                    return False
+                if len(password) < 4:
+                    print("❌ Password too short")
+                    return False
             
-            print("Authenticating with iCloud...")
+            print("\n🔄 Connecting to iCloud...")
+            print("   This may take a few seconds...")
+            
             self.service = PyiCloudService(apple_id, password)
             
             if self.service.requires_2fa:
-                print("Two-factor authentication required")
-                code = input("Enter 2FA code: ").strip()
-                if not self.service.validate_2fa_code(code):
-                    print("Invalid 2FA code")
-                    return False
+                print("\n🔐 Two-Factor Authentication Required")
+                print("   A verification code has been sent to your trusted devices")
+                print("   Check your iPhone, iPad, or Mac for the notification")
                 
-                # Save trusted device
+                while True:
+                    code = input("   Enter 6-digit verification code: ").strip()
+                    if len(code) != 6 or not code.isdigit():
+                        print("   ❌ Please enter a valid 6-digit code")
+                        continue
+                    
+                    if self.service.validate_2fa_code(code):
+                        print("   ✅ Two-factor authentication successful")
+                        break
+                    else:
+                        print("   ❌ Invalid verification code. Please try again.")
+                        continue
+                
+                # Check if session is trusted
                 if not self.service.is_trusted_session:
-                    print("Session not trusted. Some features may be limited.")
+                    print("\n⚠️  Session not trusted")
+                    print("   Some features may be limited until you trust this device")
+                    print("   You can trust this device in your iCloud security settings")
             
             self.apple_id = apple_id
             self.authenticated = True
@@ -70,8 +102,15 @@ class iCloudAuth:
             # Save to keyring for future use
             if use_keyring and KEYRING_AVAILABLE:
                 keyring.set_password("iCloudCLI", apple_id, password)
+                print("\n🔑 Credentials saved securely in system keyring")
+            else:
+                print("\n📝 Credentials not saved (keyring not available)")
             
-            print("✅ Authentication successful!")
+            print("\n🎉 Authentication Successful!")
+            print("   You now have secure access to your iCloud data")
+            print("   All modules will load real data from your iCloud account")
+            print("   Remember: This CLI operates in read-only mode")
+            
             return True
             
         except PyiCloudFailedLoginException:
