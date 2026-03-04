@@ -12,9 +12,17 @@ cd icli
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the CLI
+# Quick demo (non-interactive)
+python quickstart.py
+
+# Interactive CLI (requires user input)
 python main.py
+
+# Read-only functionality demo
+python demo_readonly.py
 ```
+
+**Note**: `python main.py` requires interactive input. Use `python quickstart.py` for a non-interactive demonstration of all features.
 
 ## 📋 Features
 
