@@ -18,11 +18,12 @@ python main.py
 
 ## 📋 Features
 
-### Mail Module ✅
+### Mail Module ✅ (Read-Only)
 - **Unread Email Overview**: Quick summary of unread emails with sender, subject, date, and preview
 - **Email Detail View**: Full email content with proper formatting
-- **Email Management**: Mark as read, reply, forward, delete options
-- **Send Email**: Interactive email composition with multi-line support
+- **Email Management**: Mark as read only (reply, forward, delete disabled)
+- **Send Email**: Disabled in read-only mode
+- **Security Focus**: No write operations to protect email integrity
 
 ### Calendar Module 🚧
 - List upcoming events
@@ -69,11 +70,13 @@ icli/
 5) Exit
 ```
 
-### Mail Functionality
+### Mail Functionality (Read-Only)
 1. **List unread emails**: Shows overview of all unread emails
 2. **Read email**: Select an email number to view full content
-3. **Manage email**: Reply, forward, delete, or mark as read
-4. **Send email**: Compose and send new emails
+3. **Manage email**: Mark as read only (no write operations)
+4. **Send email**: ❌ Disabled in read-only mode
+
+**Note**: This CLI operates in read-only mode for security. No emails can be sent, replied to, forwarded, or deleted.
 
 ## 🔧 Development
 
