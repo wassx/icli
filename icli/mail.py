@@ -72,6 +72,10 @@ class MailModule:
     
     def list_emails(self):
         """List unread emails with quick overview"""
+        # Check session activity first
+        if self.auth:
+            self.auth.check_session_activity()
+        
         # Load real data if enabled
         if self._use_real_data:
             self._load_real_emails()

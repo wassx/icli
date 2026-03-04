@@ -3,6 +3,7 @@ Authentication module for iCloud CLI
 Handles Apple ID authentication and session management
 """
 
+import time
 try:
     import keyring
     KEYRING_AVAILABLE = True
@@ -33,6 +34,10 @@ class iCloudAuth:
         self.service = None
         self.authenticated = False
         self.apple_id = None
+        self.session_token = None
+        self.refresh_token = None
+        self.session_expiry = None
+        self.last_activity = None
     
     def login(self, apple_id=None, password=None, use_keyring=True):
         """Authenticate with iCloud with improved UX"""
@@ -105,6 +110,9 @@ class iCloudAuth:
             self.apple_id = apple_id
             self.authenticated = True
             
+            # Start session with timeout
+            self._start_session(duration_hours=24)
+            
             # Save to keyring for future use
             if use_keyring and KEYRING_AVAILABLE:
                 keyring.set_password("iCloudCLI", apple_id, password)
@@ -115,6 +123,7 @@ class iCloudAuth:
             print("\nAuthentication Successful!")
             print("   You now have secure access to your iCloud data")
             print("   All modules will load real data from your iCloud account")
+            print("   Session will expire in 24 hours")
             print("   Remember: This CLI operates in read-only mode")
             
             return True
@@ -129,16 +138,116 @@ class iCloudAuth:
     def logout(self):
         """Logout from iCloud"""
         if self.service:
-            # Clear keyring
-            if self.apple_id and KEYRING_AVAILABLE:
-                keyring.delete_password("iCloudCLI", self.apple_id)
-            
-            self.service = None
-            self.authenticated = False
-            self.apple_id = None
+            print("\nLogging out...")
+            self._clear_session()
             print("Logged out successfully")
         else:
             print("Not logged in")
+    
+    def try_resume_session(self):
+        """Try to resume an existing session"""
+        if not KEYRING_AVAILABLE or not PYICLOUD_AVAILABLE:
+            return False
+        
+        try:
+            # Try to get saved credentials
+            saved_credentials = keyring.get_credential("iCloudCLI", None)
+            if saved_credentials:
+                apple_id = saved_credentials.username
+                password = saved_credentials.password
+                
+                print(f"Found saved credentials for {apple_id}")
+                print("Attempting to resume session...")
+                
+                # Try to authenticate
+                self.service = PyiCloudService(apple_id, password)
+                
+                if self.service.requires_2fa:
+                    print("2FA required for session resume")
+                    return False
+                
+                self.apple_id = apple_id
+                self.authenticated = True
+                self._start_session(duration_hours=24)
+                
+                print("Session resumed successfully!")
+                return True
+            else:
+                return False
+                
+        except Exception as e:
+            print(f"Session resume failed: {str(e)}")
+            return False
+    
+    def get_oauth_token(self):
+        """Get OAuth token if available"""
+        if not self.is_authenticated():
+            return None
+        
+        try:
+            # Try to get OAuth token from service
+            if hasattr(self.service, 'oauth_token'):
+                return self.service.oauth_token
+            elif hasattr(self.service, 'get_oauth_token'):
+                return self.service.get_oauth_token()
+        except Exception:
+            pass
+        
+        return None
+    
+    def save_oauth_token(self, token, refresh_token=None):
+        """Save OAuth tokens for future use"""
+        self.session_token = token
+        self.refresh_token = refresh_token
+        
+        if KEYRING_AVAILABLE:
+            try:
+                # Save tokens securely
+                keyring.set_password("iCloudCLI_tokens", self.apple_id, f"{token}:{refresh_token}")
+                return True
+            except Exception:
+                pass
+        
+        return False
+    
+    def load_oauth_token(self):
+        """Load saved OAuth tokens"""
+        if not self.apple_id or not KEYRING_AVAILABLE:
+            return False
+        
+        try:
+            token_data = keyring.get_password("iCloudCLI_tokens", self.apple_id)
+            if token_data and ":" in token_data:
+                self.session_token, self.refresh_token = token_data.split(":", 1)
+                return True
+        except Exception:
+            pass
+        
+        return False
+    
+    def refresh_oauth_token(self):
+        """Refresh OAuth token using refresh token"""
+        if not self.refresh_token or not self.is_authenticated():
+            return False
+        
+        try:
+            print("Refreshing OAuth token...")
+            # This would require proper OAuth refresh endpoint
+            # For now, we'll simulate the process
+            if hasattr(self.service, 'refresh_oauth_token'):
+                new_token = self.service.refresh_oauth_token(self.refresh_token)
+                if new_token:
+                    self.session_token = new_token
+                    self.save_oauth_token(new_token, self.refresh_token)
+                    print("OAuth token refreshed successfully")
+                    return True
+            
+            print("OAuth token refresh not supported by current service")
+            return False
+            
+        except Exception as e:
+            print(f"OAuth token refresh failed: {str(e)}")
+            return False
     
     def get_mail_service(self):
         """Get mail service if authenticated"""
@@ -160,4 +269,61 @@ class iCloudAuth:
     
     def is_authenticated(self):
         """Check authentication status"""
-        return self.authenticated and self.service is not None
+        if not self.authenticated or not self.service:
+            return False
+        
+        # Check if session is still valid
+        if self.session_expiry and self.session_expiry < time.time():
+            print("Session expired. Please log in again.")
+            self._clear_session()
+            return False
+        
+        return True
+    
+    def _clear_session(self):
+        """Clear current session data"""
+        self.service = None
+        self.authenticated = False
+        self.session_token = None
+        self.refresh_token = None
+        self.session_expiry = None
+        self.last_activity = None
+        
+        # Clear keyring if apple_id is set
+        if self.apple_id and KEYRING_AVAILABLE:
+            keyring.delete_password("iCloudCLI", self.apple_id)
+        
+        self.apple_id = None
+    
+    def _start_session(self, duration_hours=24):
+        """Start a new session with timeout"""
+        import time
+        self.last_activity = time.time()
+        self.session_expiry = self.last_activity + (duration_hours * 3600)
+        print(f"Session started. Will expire in {duration_hours} hours.")
+    
+    def refresh_session(self):
+        """Refresh the current session"""
+        if not self.is_authenticated():
+            print("No active session to refresh.")
+            return False
+        
+        import time
+        self.last_activity = time.time()
+        # Extend session by 24 hours
+        self.session_expiry = self.last_activity + (24 * 3600)
+        print("Session refreshed. Extended for another 24 hours.")
+        return True
+    
+    def check_session_activity(self):
+        """Check and refresh session if needed"""
+        if not self.is_authenticated():
+            return False
+        
+        import time
+        # Auto-refresh if session expires soon (within 1 hour)
+        if self.session_expiry and (self.session_expiry - time.time()) < 3600:
+            print("Session about to expire. Refreshing...")
+            return self.refresh_session()
+        
+        return True

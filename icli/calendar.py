@@ -10,6 +10,9 @@ class CalendarModule:
             print("Not authenticated. Calendar functionality requires login.")
             return
         
+        # Check session activity
+        self.auth.check_session_activity()
+        
         try:
             calendar_service = self.auth.get_calendar_service()
             if not calendar_service:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """iCloud CLI - Main entry point"""
 
+import time
 from icli import iCloudCLI
 
 def show_main_menu(cli):
@@ -24,7 +25,8 @@ def handle_menu_choice(choice, cli):
         if cli.auth.is_authenticated():
             print("\n1) Logout")
             print("2) Account information")
-            print("3) Back to main menu")
+            print("3) Refresh session")
+            print("4) Back to main menu")
         else:
             print("\n1) Login to iCloud")
             print("2) About authentication")
@@ -64,6 +66,12 @@ def handle_menu_choice(choice, cli):
                 print("Authentication: Active")
                 print("Email: " + cli.auth.apple_id if cli.auth.apple_id else "Unknown")
                 print("Session: Secure")
+                
+                # Show session status
+                if cli.auth.session_expiry:
+                    remaining = (cli.auth.session_expiry - time.time()) / 3600
+                    print(f"Session expires in: {remaining:.1f} hours")
+                
                 print("\nData Access:")
                 print("• Mail: Real iCloud emails")
                 print("• Calendar: Real iCloud events")
@@ -89,6 +97,16 @@ def handle_menu_choice(choice, cli):
                 print("• No modifications possible")
                 print("• Full privacy protection")
         elif auth_choice == "3":
+            if cli.auth.is_authenticated():
+                # Refresh session
+                if cli.auth.refresh_session():
+                    print("Session refreshed successfully!")
+                else:
+                    print("Session refresh failed.")
+                input("\nPress Enter to continue...")
+            else:
+                return True
+        elif auth_choice == "4" and cli.auth.is_authenticated():
             return True
         else:
             print("Invalid choice")

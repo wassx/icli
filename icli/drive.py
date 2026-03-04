@@ -10,6 +10,9 @@ class DriveModule:
             print("Not authenticated. iCloud Drive functionality requires login.")
             return
         
+        # Check session activity
+        self.auth.check_session_activity()
+        
         try:
             drive_service = self.auth.get_drive_service()
             if not drive_service:
