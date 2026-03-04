@@ -197,8 +197,21 @@ def main():
     print("Welcome to iCloud CLI")
     print("=" * 40)
     print("A command-line interface for your iCloud services")
-    print("Current mode: Demo (mock data)")
-    print("Note: Login to access your real iCloud data")
+    
+    # Check if we can use real data
+    has_pyicloud = True
+    try:
+        from pyicloud import PyiCloudService
+    except ImportError:
+        has_pyicloud = False
+    
+    if has_pyicloud:
+        print("Current mode: Ready for real iCloud data 🎉")
+        print("Note: Login to access your actual iCloud account")
+    else:
+        print("Current mode: Demo (mock data)")
+        print("⚠️  Install 'pyicloud' for real iCloud access")
+        print("   Command: pip install pyicloud keyring")
     
     running = True
     

@@ -38,9 +38,33 @@ class iCloudAuth:
         self.refresh_token = None
         self.session_expiry = None
         self.last_activity = None
+        self._check_dependencies()
+    
+    def _check_dependencies(self):
+        """Check and warn about missing dependencies"""
+        missing_deps = []
+        
+        if not PYICLOUD_AVAILABLE:
+            missing_deps.append("pyicloud")
+        
+        if not KEYRING_AVAILABLE:
+            missing_deps.append("keyring")
+        
+        if missing_deps:
+            print(f"⚠️  Missing dependencies for real iCloud data: {', '.join(missing_deps)}")
+            print(f"   Install with: pip install {' '.join(missing_deps)}")
+            print(f"   Continuing in demo mode with mock data.")
+            print()
     
     def login(self, apple_id=None, password=None, use_keyring=True):
         """Authenticate with iCloud with improved UX"""
+        # Check dependencies before attempting login
+        if not PYICLOUD_AVAILABLE:
+            print("\n❌ Cannot login: pyicloud library not installed")
+            print("   Install with: pip install pyicloud")
+            print("   Continuing in demo mode.\n")
+            return False
+        
         try:
             # Check if we already have credentials in keyring
             if use_keyring and apple_id and KEYRING_AVAILABLE:
