@@ -17,18 +17,18 @@ def show_main_menu(cli):
 def handle_menu_choice(choice, cli):
     """Handle the user's menu choice"""
     if choice == "4":
-        print("\n=== 🔐 Authentication ===")
-        auth_status = "🔒 Logged in" if cli.auth.is_authenticated() else "🔓 Not logged in"
+        print("\n=== Authentication ===")
+        auth_status = "Logged in" if cli.auth.is_authenticated() else "Not logged in"
         print(f"Current status: {auth_status}")
         
         if cli.auth.is_authenticated():
-            print("\n1) 🔒 Logout")
-            print("2) 📋 Account info")
-            print("3) ⬅️ Back to main menu")
+            print("\n1) Logout")
+            print("2) Account information")
+            print("3) Back to main menu")
         else:
-            print("\n1) 🔓 Login to iCloud")
-            print("2) ❓ About authentication")
-            print("3) ⬅️ Back to main menu")
+            print("\n1) Login to iCloud")
+            print("2) About authentication")
+            print("3) Back to main menu")
         
         auth_choice = input("\nEnter your choice: ").strip()
         
@@ -51,40 +51,40 @@ def handle_menu_choice(choice, cli):
                 print("• 2FA code if enabled on your account")
                 
                 if cli.auth.login():
-                    print("\n🎉 Login successful!")
+                    print("\nLogin successful!")
                     print("   You now have access to your real iCloud data.")
                     print("   All modules will load data from your iCloud account.")
                 else:
-                    print("\n⚠️  Login cancelled or failed.")
+                    print("\nLogin cancelled or failed.")
                     print("   Continuing in demo mode.")
         elif auth_choice == "2":
             if cli.auth.is_authenticated():
                 # Show account info
                 print("\n=== Account Information ===")
-                print("🔒 Authentication: Active")
-                print("📧 Email: " + cli.auth.apple_id if cli.auth.apple_id else "Unknown")
-                print("🔐 Session: Secure")
-                print("\n📊 Data Access:")
+                print("Authentication: Active")
+                print("Email: " + cli.auth.apple_id if cli.auth.apple_id else "Unknown")
+                print("Session: Secure")
+                print("\nData Access:")
                 print("• Mail: Real iCloud emails")
                 print("• Calendar: Real iCloud events")
                 print("• Drive: Real iCloud files")
-                print("\n🔄 Session Management:")
+                print("\nSession Management:")
                 print("• Read-only access (no modifications)")
                 print("• Secure connection")
                 print("• Automatic reconnection")
             else:
                 # Show authentication info
                 print("\n=== About Authentication ===")
-                print("🔐 Secure Login Process:")
+                print("Secure Login Process:")
                 print("1. Enter your Apple ID and password")
                 print("2. Complete 2FA if enabled (recommended)")
                 print("3. Access your real iCloud data")
-                print("\n🛡️ Security Features:")
+                print("\nSecurity Features:")
                 print("• End-to-end encryption")
                 print("• No password storage (optional keyring)")
                 print("• Read-only access only")
                 print("• Session timeout protection")
-                print("\n📋 Data Access:")
+                print("\nData Access:")
                 print("• View emails, events, and files")
                 print("• No modifications possible")
                 print("• Full privacy protection")
@@ -142,10 +142,10 @@ def handle_menu_choice(choice, cli):
 
 def require_authentication(cli):
     """Handle authentication requirement with better UX"""
-    print("\n🔒 Authentication Required")
+    print("\nAuthentication Required")
     print("=" * 40)
     print("To access iCloud services, please log in first.")
-    print("\n1) Log in to iCloud")
+    print("\n1) Login to iCloud")
     print("2) Continue with demo mode (mock data)")
     print("3) Exit")
     
@@ -169,18 +169,18 @@ def require_authentication(cli):
         return False
     else:
         print("\nInvalid choice. Please try again.")
-        return self.require_authentication(cli)
+        return require_authentication(cli)
 
 def main():
     """Main program loop with improved UX"""
     cli = iCloudCLI()
     
     # Welcome message
-    print("🌟 Welcome to iCloud CLI")
+    print("Welcome to iCloud CLI")
     print("=" * 40)
     print("A command-line interface for your iCloud services")
-    print("Current mode: 🎭 Demo (mock data)")
-    print("\nTip: Log in to access your real iCloud data!")
+    print("Current mode: Demo (mock data)")
+    print("Note: Login to access your real iCloud data")
     
     running = True
     

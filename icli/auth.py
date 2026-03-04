@@ -56,15 +56,21 @@ class iCloudAuth:
                     print("❌ Please enter a valid email address")
                     return False
             
-            # Get password
+            # Get password securely
             if not password:
-                print("\n🔒 Password:")
-                password = input("   Enter your password: ").strip()
+                print("\nPassword:")
+                try:
+                    import getpass
+                    password = getpass.getpass("   Enter your password: ")
+                except ImportError:
+                    # Fallback if getpass not available
+                    password = input("   Enter your password: ")
+                
                 if not password:
-                    print("❌ Password cannot be empty")
+                    print("Password cannot be empty")
                     return False
                 if len(password) < 4:
-                    print("❌ Password too short")
+                    print("Password too short")
                     return False
             
             print("\n🔄 Connecting to iCloud...")
@@ -102,11 +108,11 @@ class iCloudAuth:
             # Save to keyring for future use
             if use_keyring and KEYRING_AVAILABLE:
                 keyring.set_password("iCloudCLI", apple_id, password)
-                print("\n🔑 Credentials saved securely in system keyring")
+                print("\nCredentials saved securely in system keyring")
             else:
-                print("\n📝 Credentials not saved (keyring not available)")
+                print("\nCredentials not saved (keyring not available)")
             
-            print("\n🎉 Authentication Successful!")
+            print("\nAuthentication Successful!")
             print("   You now have secure access to your iCloud data")
             print("   All modules will load real data from your iCloud account")
             print("   Remember: This CLI operates in read-only mode")
