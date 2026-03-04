@@ -91,27 +91,18 @@ class MailModule:
         self._offer_email_options(email_index)
     
     def _offer_email_options(self, email_index):
-        """Offer options after reading an email"""
-        print("\nOptions:")
-        print("1. Reply")
-        print("2. Forward")
-        print("3. Delete")
-        print("4. Mark as read")
-        print("5. Back to email list")
+        """Offer options after reading an email - READ-ONLY mode"""
+        print("\nOptions (Read-Only Mode):")
+        print("1. Mark as read")
+        print("2. Back to email list")
         
         choice = input("\nEnter your choice: ").strip()
         
         if choice == "1":
-            print("Reply functionality not yet implemented")
-        elif choice == "2":
-            print("Forward functionality not yet implemented")
-        elif choice == "3":
-            print("Delete functionality not yet implemented")
-        elif choice == "4":
             print("Email marked as read")
             # Remove from unread list
             del self.unread_emails[email_index]
-        elif choice == "5":
+        elif choice == "2":
             return
         else:
             print("Invalid choice")
@@ -121,8 +112,6 @@ class MailModule:
             self.list_emails()
     
     def send_email(self, to, subject, body):
-        """Send an email"""
-        print(f"Sending email to {to}...")
-        print(f"Subject: {subject}")
-        print(f"Body: {body}")
-        # TODO: Implement actual email sending
+        """Send an email - DISABLED for read-only mode"""
+        print("❌ Email sending is disabled in read-only mode")
+        return False

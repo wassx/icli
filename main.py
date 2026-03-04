@@ -18,25 +18,11 @@ def handle_menu_choice(choice, cli):
     if choice == "1":
         print("\n=== Mail Menu ===")
         print("1) List unread emails")
-        print("2) Send email")
-        print("3) Back to main menu")
+        print("2) Back to main menu")
         mail_choice = input("\nEnter your choice: ").strip()
         if mail_choice == "1":
             cli.mail.list_emails()
         elif mail_choice == "2":
-            print("\n=== Send Email ===")
-            to = input("To: ").strip()
-            subject = input("Subject: ").strip()
-            print("Enter email body (press Enter twice to finish):")
-            body_lines = []
-            while True:
-                line = input()
-                if line == "":
-                    break
-                body_lines.append(line)
-            body = "\n".join(body_lines)
-            cli.mail.send_email(to, subject, body)
-        elif mail_choice == "3":
             return True
         else:
             print("Invalid choice")
