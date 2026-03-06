@@ -4,6 +4,7 @@ Handles Apple ID authentication and session management
 """
 
 import time
+import logging
 try:
     import keyring
     KEYRING_AVAILABLE = True
@@ -27,6 +28,16 @@ except ImportError:
     class PyiCloudFailedLoginException(Exception):
         pass
 
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger('iCloudCLI.Auth')
+
 class iCloudAuth:
     """Handle authentication with iCloud services"""
     
@@ -39,6 +50,7 @@ class iCloudAuth:
         self.session_expiry = None
         self.last_activity = None
         self._check_dependencies()
+        logger.info("iCloudAuth initialized")
     
     def _check_dependencies(self):
         """Check and warn about missing dependencies"""
