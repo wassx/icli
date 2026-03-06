@@ -109,8 +109,25 @@ class iCloudAuth:
                 self.service = PyiCloudService(apple_id, password)
                 
                 # Verify the service is actually authenticated
-                if not self.service.authenticated:
-                    print("❌ Authentication failed: Invalid credentials")
+                # Try different methods to check authentication status
+                try:
+                    # Method 1: Check authenticated attribute (newer versions)
+                    if hasattr(self.service, 'authenticated') and not self.service.authenticated:
+                        print("❌ Authentication failed: Invalid credentials")
+                        return False
+                    
+                    # Method 2: Try to access a protected resource to verify
+                    # This will raise an exception if not authenticated
+                    if hasattr(self.service, 'account'):
+                        _ = self.service.account  # Force authentication check
+                    elif hasattr(self.service, 'get_account'):
+                        _ = self.service.get_account()
+                    else:
+                        # If we can't verify, assume it worked
+                        pass
+                        
+                except Exception as auth_error:
+                    print(f"❌ Authentication failed: {str(auth_error)}")
                     return False
                     
             except Exception as e:
