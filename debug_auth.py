@@ -50,38 +50,7 @@ def debug_authentication():
         print("   try_resume_session method not available")
     print()
     
-    # Check mail service connection
-    print("4. Mail Service Check:")
-    mail_service = cli.auth.get_mail_service()
-    print(f"   Mail service: {mail_service is not None}")
-    print(f"   Service type: {type(mail_service)}")
-    print()
-    
-    # Try to load real emails
-    print("5. Attempting to Load Real Emails:")
-    cli.mail._use_real_data = True
-    email_count_before = len(cli.mail.unread_emails)
-    
-    try:
-        cli.mail._load_real_emails()
-        email_count_after = len(cli.mail.unread_emails)
-        print(f"   Emails before: {email_count_before}")
-        print(f"   Emails after: {email_count_after}")
-        print(f"   Using real data: {email_count_after > 0 and cli.mail.unread_emails[0].get('id') != 1}")  # Check if not mock data
-    except Exception as e:
-        print(f"   Error loading emails: {str(e)}")
-    print()
-    
-    # Check if mock data is being used
-    print("6. Data Source Analysis:")
-    if cli.mail.unread_emails:
-        first_email = cli.mail.unread_emails[0]
-        is_mock = first_email.get('id') == 1 and 'Amazon' in first_email.get('from', '')
-        print(f"   Data appears to be mock: {is_mock}")
-        print(f"   First email from: {first_email.get('from', 'Unknown')}")
-    else:
-        print("   No emails loaded")
-    print()
+
     
     print("🔍 Debug Complete")
     print("\nTroubleshooting Steps:")

@@ -50,7 +50,7 @@ python main.py
 ### **After (Fixed)**
 ```
 ✅ Real Apple ID authentication
-✅ Actual iCloud emails/events/files
+✅ Actual iCloud events/files
 ✅ Session management with auto-refresh
 ✅ OAuth token support
 ```
@@ -95,10 +95,10 @@ self._check_dependencies()  # Warns about missing packages
 
 ### **Graceful Fallback**
 ```python
-# In mail.py _load_real_emails method
+# Example fallback pattern
 if not self.auth.is_authenticated():
     print("Not authenticated. Using mock data.")
-    self._load_mock_emails()  # Fallback to mock data
+    self._load_mock_data()  # Fallback to mock data
 ```
 
 ### **Authentication Flow**
@@ -165,7 +165,7 @@ python main.py
 ```
 
 Then:
-1. Select any service (Mail, Calendar, Drive)
+1. Select any service (Calendar, Drive)
 2. Choose "Login to iCloud"
 3. Enter your Apple ID and password
 4. Complete 2FA if required
@@ -213,7 +213,7 @@ python main.py
 
 Features available in demo mode:
 - ✅ Full menu system
-- ✅ Mock email data (Amazon, GitHub, Netflix examples)
+
 - ✅ Read-only functionality
 - ✅ All UX improvements
 - ✅ Session simulation
@@ -231,13 +231,13 @@ Features available in demo mode:
 ### **Mock Data vs Real Data**
 
 **Mock Data** (Demo Mode):
-- Predefined sample emails
+
 - No authentication required
 - Works without dependencies
 - Great for testing
 
 **Real Data** (After Installation):
-- Your actual iCloud emails
+
 - Requires Apple ID login
 - Needs pyicloud dependency
 - Full functionality
@@ -246,7 +246,7 @@ Features available in demo mode:
 
 ### **Documentation**
 - `README.md` - Main documentation
-- `MAIL_FEATURES.md` - Mail module details
+
 - `agent.md` - Development guidelines
 
 ### **Tests**

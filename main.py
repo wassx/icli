@@ -8,11 +8,10 @@ def show_main_menu(cli):
     """Display the main menu and handle user input"""
     auth_status = "🔒 Logged in" if cli.auth.is_authenticated() else "🔓 Not logged in"
     print(f"\n=== iCloud CLI - {auth_status} ===")
-    print("1) Mail")
-    print("2) Calendar")
-    print("3) iCloud Drive")
-    print("4) Authentication")
-    print("5) Exit")
+    print("1) Calendar")
+    print("2) iCloud Drive")
+    print("3) Authentication")
+    print("4) Exit")
     print("\n===================")
 
 def handle_menu_choice(choice, cli):
@@ -72,7 +71,6 @@ def handle_menu_choice(choice, cli):
                     print(f"Session expires in: {remaining:.1f} hours")
                 
                 print("\nData Access:")
-                print("• Mail: Real iCloud emails")
                 print("• Calendar: Real iCloud events")
                 print("• Drive: Real iCloud files")
                 print("\nSession Management:")
@@ -97,17 +95,6 @@ def handle_menu_choice(choice, cli):
         else:
             print("Invalid choice")
     elif choice == "1":
-        print("\n=== Mail Menu ===")
-        print("1) List unread emails")
-        print("2) Back to main menu")
-        mail_choice = input("\nEnter your choice: ").strip()
-        if mail_choice == "1":
-            cli.mail.list_emails()
-        elif mail_choice == "2":
-            return True
-        else:
-            print("Invalid choice")
-    elif choice == "2":
         print("\n=== Calendar Menu ===")
         print("1) List events")
         print("2) Create event")
@@ -121,18 +108,15 @@ def handle_menu_choice(choice, cli):
             return True
     elif choice == "3":
         print("\n=== iCloud Drive Menu ===")
-        print("1) List files")
-        print("2) Upload file")
-        print("3) Download file")
-        print("4) Back to main menu")
+        print("1) Browse files (interactive tree)")
+        print("2) List files (simple)")
+        print("3) Back to main menu")
         drive_choice = input("\nEnter your choice: ").strip()
         if drive_choice == "1":
-            cli.drive.list_files()
+            cli.drive.browse_files()
         elif drive_choice == "2":
-            print("Upload file functionality not yet implemented")
+            cli.drive.list_files()
         elif drive_choice == "3":
-            print("Download file functionality not yet implemented")
-        elif drive_choice == "4":
             return True
     elif choice == "5":
         print("\nExiting iCloud CLI...")

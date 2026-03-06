@@ -314,19 +314,7 @@ class iCloudAuth:
             print(f"OAuth token refresh failed: {str(e)}")
             return False
     
-    def get_mail_service(self):
-        """Get mail service if authenticated"""
-        if not self.authenticated or not self.service:
-            return None
-        
-        # Handle different pyicloud API versions
-        if hasattr(self.service, 'mail'):
-            return self.service.mail
-        elif hasattr(self.service, 'mail_service'):
-            return self.service.mail_service
-        else:
-            print("❌ Mail service not available in this pyicloud version")
-            return None
+
     
     def get_calendar_service(self):
         """Get calendar service if authenticated"""

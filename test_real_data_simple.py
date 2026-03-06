@@ -20,27 +20,12 @@ def test_real_data_simple():
     
     # Test 2: Service access without authentication
     print("2. Service Access (Unauthenticated):")
-    print(f"   Mail service: {cli.auth.get_mail_service()}")
+
     print(f"   Calendar service: {cli.auth.get_calendar_service()}")
     print(f"   Drive service: {cli.auth.get_drive_service()}")
     print("✓ All services return None when unauthenticated\n")
     
-    # Test 3: Mail module data loading
-    print("3. Mail Module Data Loading:")
-    print("   Loading emails (should use mock data)...")
-    cli.mail._use_real_data = True
-    
-    # Count emails before
-    email_count_before = len(cli.mail.unread_emails)
-    print(f"   Emails before: {email_count_before}")
-    
-    # Load emails (this will try real data, then fall back to mock)
-    cli.mail._load_real_emails()
-    
-    # Count emails after
-    email_count_after = len(cli.mail.unread_emails)
-    print(f"   Emails after: {email_count_after}")
-    print("✓ Email loading works (with fallback to mock data)\n")
+
     
     # Test 4: Calendar module
     print("4. Calendar Module:")

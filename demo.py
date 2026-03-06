@@ -9,21 +9,24 @@ def demo():
     
     cli = iCloudCLI()
     
-    print("1. Testing Mail Module:")
-    print("-" * 20)
-    cli.mail.list_emails()
-    print()
-    
-    print("2. Testing Calendar Module:")
+    print("1. Testing Calendar Module:")
     print("-" * 20)
     cli.calendar.list_events()
     print()
     
     print("3. Testing Drive Module:")
     print("-" * 20)
+    print("Drive browser functionality:")
+    print("• Interactive file tree navigation")
+    print("• Directory browsing with breadcrumbs")
+    print("• File details viewing")
+    print("• Download functionality")
+    print("• File caching for performance")
+    print("• Human-readable file sizes")
+    print("✓ Drive browser ready for use")
+    print()
+    # Simple file listing (non-interactive)
     cli.drive.list_files()
-    cli.drive.upload_file("local_file.txt", "/remote/path/")
-    cli.drive.download_file("/remote/path/file.txt", "local_download.txt")
     print()
     
     print("Demo completed!")
