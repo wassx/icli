@@ -19,19 +19,24 @@ class MailModule:
                 return
             
             # Get unread emails from inbox
-            inbox = mail_service.inbox
-            self.unread_emails = []
-            
-            for email in inbox:
-                if not email.read:
-                    self.unread_emails.append({
-                        "id": email.id,
-                        "from": email.sender,
-                        "subject": email.subject,
-                        "date": email.date.strftime("%Y-%m-%d %H:%M:%S"),
-                        "preview": email.preview,
-                        "body": email.plain_text_body if hasattr(email, 'plain_text_body') else ""
-                    })
+            try:
+                inbox = mail_service.inbox
+                self.unread_emails = []
+                
+                for email in inbox:
+                    if not email.read:
+                        self.unread_emails.append({
+                            "id": email.id,
+                            "from": email.sender,
+                            "subject": email.subject,
+                            "date": email.date.strftime("%Y-%m-%d %H:%M:%S"),
+                            "preview": email.preview,
+                            "body": email.plain_text_body if hasattr(email, 'plain_text_body') else ""
+                        })
+            except AttributeError as e:
+                print(f"❌ Mail service API has changed: {str(e)}")
+                print("   Please check your pyicloud version and update if needed")
+                return
             
             print(f"Loaded {len(self.unread_emails)} unread emails from iCloud")
             

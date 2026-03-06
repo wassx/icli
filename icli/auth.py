@@ -277,19 +277,43 @@ class iCloudAuth:
         """Get mail service if authenticated"""
         if not self.authenticated or not self.service:
             return None
-        return self.service.mail
+        
+        # Handle different pyicloud API versions
+        if hasattr(self.service, 'mail'):
+            return self.service.mail
+        elif hasattr(self.service, 'mail_service'):
+            return self.service.mail_service
+        else:
+            print("❌ Mail service not available in this pyicloud version")
+            return None
     
     def get_calendar_service(self):
         """Get calendar service if authenticated"""
         if not self.authenticated or not self.service:
             return None
-        return self.service.calendar
+        
+        # Handle different pyicloud API versions
+        if hasattr(self.service, 'calendar'):
+            return self.service.calendar
+        elif hasattr(self.service, 'calendar_service'):
+            return self.service.calendar_service
+        else:
+            print("❌ Calendar service not available in this pyicloud version")
+            return None
     
     def get_drive_service(self):
         """Get drive service if authenticated"""
         if not self.authenticated or not self.service:
             return None
-        return self.service.drive
+        
+        # Handle different pyicloud API versions
+        if hasattr(self.service, 'drive'):
+            return self.service.drive
+        elif hasattr(self.service, 'drive_service'):
+            return self.service.drive_service
+        else:
+            print("❌ Drive service not available in this pyicloud version")
+            return None
     
     def is_authenticated(self):
         """Check authentication status"""
