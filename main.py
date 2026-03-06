@@ -106,7 +106,7 @@ def handle_menu_choice(choice, cli):
             print("Create event functionality not yet implemented")
         elif calendar_choice == "3":
             return True
-    elif choice == "3":
+    elif choice == "2":
         print("\n=== iCloud Drive Menu ===")
         print("1) Browse files (interactive tree)")
         print("2) List files (simple)")
