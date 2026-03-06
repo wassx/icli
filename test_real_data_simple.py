@@ -27,20 +27,21 @@ def test_real_data_simple():
     
     # Test 3: Mail module data loading
     print("3. Mail Module Data Loading:")
-    print("   Loading emails (should use mock data)...")
+    print("   Loading emails (requires authentication)...")
     cli.mail._use_real_data = True
     
     # Count emails before
     email_count_before = len(cli.mail.unread_emails)
     print(f"   Emails before: {email_count_before}")
     
-    # Load emails (this will try real data, then fall back to mock)
+    # Load emails (not authenticated, should exit early)
     cli.mail._load_real_emails()
     
     # Count emails after
     email_count_after = len(cli.mail.unread_emails)
     print(f"   Emails after: {email_count_after}")
-    print("✓ Email loading works (with fallback to mock data)\n")
+    assert email_count_after == email_count_before, "Unauthenticated load should not change email list"
+    print("✓ Email loading correctly requires authentication\n")
     
     # Test 4: Calendar module
     print("4. Calendar Module:")
@@ -57,7 +58,7 @@ def test_real_data_simple():
     print("🎉 All tests passed!")
     print("\nReal Data Integration Status:")
     print("• ✅ Authentication system implemented")
-    print("• ✅ Real data loading with fallback to mock")
+    print("• ✅ Real data loading when authenticated")
     print("• ✅ Error handling for missing dependencies")
     print("• ✅ All modules support real data mode")
     print("• ✅ Graceful degradation when unauthenticated")

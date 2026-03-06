@@ -14,5 +14,6 @@ class iCloudCLI:
     
     def run(self):
         """Run the main CLI interface"""
-        from ..main import main
-        main()
+        import importlib
+        main_module = importlib.import_module("main")
+        main_module.main()

@@ -33,15 +33,15 @@ def test_ux_improvements():
     print("   Drive service:", cli.auth.get_drive_service())
     print("✓ All services return None when unauthenticated\n")
     
-    # Test 4: Mock data fallback
-    print("4. Mock Data Fallback:")
+    # Test 4: Real data loading requires authentication
+    print("4. Real Data Loading (Unauthenticated):")
     cli.mail._use_real_data = True
     email_count_before = len(cli.mail.unread_emails)
-    cli.mail._load_real_emails()  # Should load mock data
+    cli.mail._load_real_emails()  # Should exit early (not authenticated)
     email_count_after = len(cli.mail.unread_emails)
     print(f"   Emails loaded: {email_count_after}")
-    assert email_count_after > 0
-    print("✓ Mock data fallback works\n")
+    assert email_count_after == email_count_before, "Unauthenticated load should not change email list"
+    print("✓ Real data loading correctly requires authentication\n")
     
     # Test 5: Authentication flow simulation
     print("5. Authentication Flow:")

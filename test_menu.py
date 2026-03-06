@@ -12,17 +12,19 @@ def test_main_menu():
     """Test that the main menu displays correctly"""
     print("Testing main menu display...")
     
+    cli = iCloudCLI()
+    
     # Capture stdout
     captured_output = StringIO()
     with patch('sys.stdout', new=captured_output):
-        show_main_menu()
+        show_main_menu(cli)
     
     output = captured_output.getvalue()
-    assert "=== iCloud CLI ===" in output
+    assert "=== iCloud CLI" in output
     assert "1) Mail" in output
     assert "2) Calendar" in output
     assert "3) iCloud Drive" in output
-    assert "4) Other" in output
+    assert "4) Authentication" in output
     assert "5) Exit" in output
     
     print("✓ Main menu display test passed")

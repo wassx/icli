@@ -3,9 +3,11 @@ Authentication module for iCloud CLI
 Handles Apple ID authentication and session management
 """
 
+import getpass
 import time
 try:
     import keyring
+    import keyring.errors
     KEYRING_AVAILABLE = True
 except ImportError:
     KEYRING_AVAILABLE = False
@@ -68,7 +70,7 @@ class iCloudAuth:
         try:
             # Check if we already have credentials in keyring
             if use_keyring and apple_id and KEYRING_AVAILABLE:
-                password = keyring.get_service("iCloudCLI", apple_id)
+                password = keyring.get_password("iCloudCLI", apple_id)
                 if password:
                     print("🔑 Found saved credentials. Logging in...")
                 else:
@@ -88,17 +90,12 @@ class iCloudAuth:
             # Get password securely
             if not password:
                 print("\nPassword:")
-                try:
-                    import getpass
-                    password = getpass.getpass("   Enter your password: ")
-                except ImportError:
-                    # Fallback if getpass not available
-                    password = input("   Enter your password: ")
+                password = getpass.getpass("   Enter your password: ")
                 
                 if not password:
                     print("Password cannot be empty")
                     return False
-                if len(password) < 4:
+                if len(password) < 8:
                     print("Password too short")
                     return False
             
@@ -135,7 +132,7 @@ class iCloudAuth:
                 return False
             
             # Verify authentication was successful
-            if not self.service.authenticated:
+            if hasattr(self.service, 'authenticated') and not self.service.authenticated:
                 print("❌ Authentication failed: Invalid Apple ID or password")
                 return False
                 
@@ -375,13 +372,15 @@ class iCloudAuth:
         
         # Clear keyring if apple_id is set
         if self.apple_id and KEYRING_AVAILABLE:
-            keyring.delete_password("iCloudCLI", self.apple_id)
+            try:
+                keyring.delete_password("iCloudCLI", self.apple_id)
+            except keyring.errors.PasswordDeleteError:
+                pass
         
         self.apple_id = None
     
     def _start_session(self, duration_hours=24):
         """Start a new session with timeout"""
-        import time
         self.last_activity = time.time()
         self.session_expiry = self.last_activity + (duration_hours * 3600)
         print(f"Session started. Will expire in {duration_hours} hours.")
@@ -392,7 +391,6 @@ class iCloudAuth:
             print("No active session to refresh.")
             return False
         
-        import time
         self.last_activity = time.time()
         # Extend session by 24 hours
         self.session_expiry = self.last_activity + (24 * 3600)
@@ -404,7 +402,6 @@ class iCloudAuth:
         if not self.is_authenticated():
             return False
         
-        import time
         # Auto-refresh if session expires soon (within 1 hour)
         if self.session_expiry and (self.session_expiry - time.time()) < 3600:
             print("Session about to expire. Refreshing...")
