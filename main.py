@@ -134,8 +134,6 @@ def handle_menu_choice(choice, cli):
             print("Download file functionality not yet implemented")
         elif drive_choice == "4":
             return True
-    elif choice == "4":
-        print("\nOther functionality coming soon...")
     elif choice == "5":
         print("\nExiting iCloud CLI...")
         return False

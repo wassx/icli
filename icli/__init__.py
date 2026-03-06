@@ -11,8 +11,3 @@ class iCloudCLI:
         self.mail = MailModule(self.auth)
         self.calendar = CalendarModule(self.auth)
         self.drive = DriveModule(self.auth)
-    
-    def run(self):
-        """Run the main CLI interface"""
-        from ..main import main
-        main()

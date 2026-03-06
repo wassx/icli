@@ -35,7 +35,7 @@ class CalendarModule:
             print(f"❌ Error loading calendar events: {str(e)}")
             print("   Please check your internet connection and try again.")
         
-    def create_event(self, title, date, time):
+    def create_event(self, title, date, start_time):
         """Create a new calendar event"""
-        print(f"Creating event: {title} on {date} at {time}")
+        print(f"Creating event: {title} on {date} at {start_time}")
         # TODO: Implement actual event creation
