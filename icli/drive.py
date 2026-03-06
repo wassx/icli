@@ -233,11 +233,11 @@ class DriveModule:
     def _get_node_for_path(self, drive_service):
         """Get the DriveNode for the current path"""
         if self.current_path == "/":
-            return drive_service.root()
+            return drive_service.root  # root is a property, not a method
         
         # For now, return root since path navigation is complex
         # In a full implementation, we'd traverse the path
-        return drive_service.root()
+        return drive_service.root  # root is a property, not a method
     
     def _find_child_node(self, parent_node, child_name):
         """Find a child node by name"""
@@ -309,11 +309,11 @@ class DriveModule:
             
             # Get root node
             if path == "/":
-                root_node = drive_service.root()
+                root_node = drive_service.root  # root is a property, not a method
             else:
                 # For simplicity, use root for now
                 # Full path support would require traversal
-                root_node = drive_service.root()
+                root_node = drive_service.root  # root is a property, not a method
             
             if not root_node:
                 print("No files found in this directory.")
