@@ -105,8 +105,23 @@ class iCloudAuth:
             print("\n🔄 Connecting to iCloud...")
             print("   This may take a few seconds...")
             
-            self.service = PyiCloudService(apple_id, password)
+            try:
+                self.service = PyiCloudService(apple_id, password)
+                
+                # Verify the service is actually authenticated
+                if not self.service.authenticated:
+                    print("❌ Authentication failed: Invalid credentials")
+                    return False
+                    
+            except Exception as e:
+                print(f"❌ Authentication failed: {str(e)}")
+                return False
             
+            # Verify authentication was successful
+            if not self.service.authenticated:
+                print("❌ Authentication failed: Invalid Apple ID or password")
+                return False
+                
             if self.service.requires_2fa:
                 print("\n🔐 Two-Factor Authentication Required")
                 print("   A verification code has been sent to your trusted devices")
@@ -118,12 +133,16 @@ class iCloudAuth:
                         print("   ❌ Please enter a valid 6-digit code")
                         continue
                     
-                    if self.service.validate_2fa_code(code):
-                        print("   ✅ Two-factor authentication successful")
-                        break
-                    else:
-                        print("   ❌ Invalid verification code. Please try again.")
-                        continue
+                    try:
+                        if self.service.validate_2fa_code(code):
+                            print("   ✅ Two-factor authentication successful")
+                            break
+                        else:
+                            print("   ❌ Invalid verification code. Please try again.")
+                            continue
+                    except Exception as e:
+                        print(f"   ❌ 2FA validation error: {str(e)}")
+                        return False
                 
                 # Check if session is trusted
                 if not self.service.is_trusted_session:
