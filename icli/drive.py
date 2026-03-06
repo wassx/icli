@@ -17,7 +17,7 @@ class DriveModule:
         
         print("\n=== iCloud Drive Browser ===")
         print("📁 Navigating your iCloud Drive files")
-        print("Commands: [number] to enter, b=back, q=quit, r=refresh")
+        print("Commands: [number] to enter, 0 for parent (..), b=back, q=quit, r=refresh")
         print("=" * 60)
         
         while True:
@@ -71,31 +71,41 @@ class DriveModule:
             # Display breadcrumb
             self._show_breadcrumb()
             
+            # Add parent directory entry (..) if not at root
+            items = []
+            if self.current_path != "/":
+                items.append(("..", "PARENT", None))
+            
+            # Add actual children
+            for node in children:
+                node_type = "FOLDER" if node.type == "folder" else "FILE"
+                items.append((node.name, node_type, node))
+            
             # Display files
-            print(f"\n📁 Contents ({len(children)} items):")
+            print(f"\n📁 Contents ({len(items)} items):")
             print("-" * 60)
             
-            directories = []
-            files_list = []
-            
-            for i, node in enumerate(children, 1):
-                # Determine if it's a directory by checking if it has children
-                node_type = "FOLDER" if node.type == "folder" else "FILE"
+            # Show parent directory first (if present)
+            if items and items[0][0] == "..":
+                print(" 0. 📁 .. (Parent Directory)")
                 
-                if node_type == "FOLDER":
-                    directories.append((i, node))
-                else:
-                    files_list.append((i, node))
-            
-            # Show directories first
-            for i, node in directories:
-                size_str = self._format_size(self._get_node_size(node)) if hasattr(node, 'data') else "-"
-                print(f"{i:2d}. 📁 {node.name}/ {size_str}")
-            
-            # Show files
-            for i, node in files_list:
-                size_str = self._format_size(self._get_node_size(node)) if hasattr(node, 'data') else "-"
-                print(f"{i:2d}. 📄 {node.name} {size_str}")
+                # Show actual items starting from index 1
+                for i, (name, item_type, node) in enumerate(items[1:], 1):
+                    if item_type == "FOLDER":
+                        size_str = self._format_size(self._get_node_size(node)) if hasattr(node, 'data') else "-"
+                        print(f"{i:2d}. 📁 {name}/ {size_str}")
+                    else:
+                        size_str = self._format_size(self._get_node_size(node)) if hasattr(node, 'data') else "-"
+                        print(f"{i:2d}. 📄 {name} {size_str}")
+            else:
+                # No parent directory (at root), show all items normally
+                for i, (name, item_type, node) in enumerate(items, 1):
+                    if item_type == "FOLDER":
+                        size_str = self._format_size(self._get_node_size(node)) if hasattr(node, 'data') else "-"
+                        print(f"{i:2d}. 📁 {name}/ {size_str}")
+                    else:
+                        size_str = self._format_size(self._get_node_size(node)) if hasattr(node, 'data') else "-"
+                        print(f"{i:2d}. 📄 {name} {size_str}")
             
             return True
             
@@ -126,33 +136,41 @@ class DriveModule:
                 print("❌ Could not access current directory")
                 return
             
-            # Get children from cache or fresh
-            cache_key = self.current_path
-            if cache_key in self.file_cache:
-                children = self.file_cache[cache_key]
-            else:
-                children = current_node.get_children()
-                self.file_cache[cache_key] = children
+            # Build items list with parent directory
+            items = []
+            if self.current_path != "/":
+                items.append(("..", "PARENT", None))
             
-            if 1 <= choice_num <= len(children):
-                selected_node = children[choice_num - 1]
-                
-                # Determine if it's a directory
-                node_type = "FOLDER" if selected_node.type == "folder" else "FILE"
-                
-                if node_type == "FOLDER":
-                    # Enter directory - update path and clear cache for new location
-                    new_path = f"{self.current_path.rstrip('/')}/{selected_node.name}"
-                    self.current_path = new_path
-                    
-                    # Clear cache for the new path since we're navigating to it
-                    if new_path in self.file_cache:
-                        del self.file_cache[new_path]
-                    
-                    print(f"📁 Entered directory: {self.current_path}")
+            for node in children:
+                node_type = "FOLDER" if node.type == "folder" else "FILE"
+                items.append((node.name, node_type, node))
+            
+            # Handle selection (0 for parent, 1+ for actual items)
+            if choice_num == 0 and self.current_path != "/":
+                # Navigate to parent directory
+                self._go_back()
+            elif 1 <= choice_num <= len(items):
+                # Adjust index for parent directory
+                selected_index = choice_num - 1
+                if items[selected_index][1] == "PARENT":
+                    # This shouldn't happen since we handle 0 separately, but just in case
+                    self._go_back()
                 else:
-                    # Show file details
-                    self._show_file_details(selected_node)
+                    name, item_type, selected_node = items[selected_index]
+                    
+                    if item_type == "FOLDER":
+                        # Enter directory - update path and clear cache for new location
+                        new_path = f"{self.current_path.rstrip('/')}/{name}"
+                        self.current_path = new_path
+                        
+                        # Clear cache for the new path since we're navigating to it
+                        if new_path in self.file_cache:
+                            del self.file_cache[new_path]
+                        
+                        print(f"📁 Entered directory: {self.current_path}")
+                    else:
+                        # Show file details
+                        self._show_file_details(selected_node)
             else:
                 print("❌ Invalid selection")
                 
