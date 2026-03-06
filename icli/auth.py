@@ -106,26 +106,27 @@ class iCloudAuth:
             print("   This may take a few seconds...")
             
             try:
+                # Create the service - this will validate credentials
                 self.service = PyiCloudService(apple_id, password)
                 
-                # Verify the service is actually authenticated
-                # Try different methods to check authentication status
+                # The best way to verify authentication is to try using the service
+                # Different pyicloud versions have different ways to check this
                 try:
-                    # Method 1: Check authenticated attribute (newer versions)
-                    if hasattr(self.service, 'authenticated') and not self.service.authenticated:
-                        print("❌ Authentication failed: Invalid credentials")
-                        return False
-                    
-                    # Method 2: Try to access a protected resource to verify
-                    # This will raise an exception if not authenticated
+                    # Try to get account info - this will fail if not authenticated
                     if hasattr(self.service, 'account'):
-                        _ = self.service.account  # Force authentication check
+                        account = self.service.account
                     elif hasattr(self.service, 'get_account'):
-                        _ = self.service.get_account()
+                        account = self.service.get_account()
                     else:
-                        # If we can't verify, assume it worked
-                        pass
-                        
+                        # Try to access any service to verify
+                        if hasattr(self.service, 'mail'):
+                            _ = self.service.mail
+                        elif hasattr(self.service, 'calendar'):
+                            _ = self.service.calendar
+                        else:
+                            # If we can't find a service, try a direct API call
+                            _ = self.service.request('/account')
+                    
                 except Exception as auth_error:
                     print(f"❌ Authentication failed: {str(auth_error)}")
                     return False
