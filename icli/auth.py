@@ -28,15 +28,7 @@ except ImportError:
     class PyiCloudFailedLoginException(Exception):
         pass
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger('iCloudCLI.Auth')
+logger = logging.getLogger(__name__)
 
 class iCloudAuth:
     """Handle authentication with iCloud services"""
@@ -80,7 +72,7 @@ class iCloudAuth:
         try:
             # Check if we already have credentials in keyring
             if use_keyring and apple_id and KEYRING_AVAILABLE:
-                password = keyring.get_service("iCloudCLI", apple_id)
+                password = keyring.get_password("iCloudCLI", apple_id)
                 if password:
                     print("🔑 Found saved credentials. Logging in...")
                 else:
@@ -148,7 +140,7 @@ class iCloudAuth:
                 return False
             
             # Verify authentication was successful
-            if not self.service.authenticated:
+            if hasattr(self.service, 'authenticated') and not self.service.authenticated:
                 print("❌ Authentication failed: Invalid Apple ID or password")
                 return False
                 
@@ -394,7 +386,6 @@ class iCloudAuth:
     
     def _start_session(self, duration_hours=24):
         """Start a new session with timeout"""
-        import time
         self.last_activity = time.time()
         self.session_expiry = self.last_activity + (duration_hours * 3600)
         print(f"Session started. Will expire in {duration_hours} hours.")
@@ -405,7 +396,6 @@ class iCloudAuth:
             print("No active session to refresh.")
             return False
         
-        import time
         self.last_activity = time.time()
         # Extend session by 24 hours
         self.session_expiry = self.last_activity + (24 * 3600)
@@ -417,7 +407,6 @@ class iCloudAuth:
         if not self.is_authenticated():
             return False
         
-        import time
         # Auto-refresh if session expires soon (within 1 hour)
         if self.session_expiry and (self.session_expiry - time.time()) < 3600:
             print("Session about to expire. Refreshing...")

@@ -13,9 +13,9 @@ setup(
         ],
     },
     install_requires=[
-        # Add dependencies here
-        # 'pyicloud',
-        # 'requests',
+        'pyicloud>=1.0.1',
+        'requests>=2.31.0',
+        'keyring>=24.2.0',
     ],
     python_requires='>=3.6',
 )
