@@ -4,28 +4,59 @@ A command-line interface for interacting with iCloud services including Mail, Ca
 
 ## 🚀 Quick Start
 
+### **Recommended: Use Virtual Environment**
+
+```bash
+# 1. Create and activate virtual environment
+python3 -m venv icli_env
+source icli_env/bin/activate  # Linux/Mac
+# icli_env\Scripts\activate   # Windows
+
+# 2. Clone the repository
+git clone https://github.com/wassx/icli.git
+cd icli
+
+# 3. Install dependencies (for real iCloud data)
+pip install pyicloud keyring requests
+
+# 4. Run the CLI
+python main.py
+
+# 5. When done
+deactivate
+```
+
+### **Alternative: System-wide Installation**
+
 ```bash
 # Clone the repository
 git clone https://github.com/wassx/icli.git
 cd icli
 
 # Install dependencies (for real iCloud data)
-pip install pyicloud keyring requests
+pip install --user pyicloud keyring requests
 
-# Quick demo (non-interactive, uses mock data)
-python quickstart.py
-
-# Interactive CLI with real data support
+# Run the CLI
 python main.py
+```
 
-# Test real data integration
+### **For Development**
+
+```bash
+# Run tests
+python test_security.py
+python test_ux_improvements.py
+python test_oauth.py
 python test_real_data_simple.py
 
-# Read-only functionality demo
+# Run demos
+python quickstart.py
 python demo_readonly.py
 ```
 
-**Note**: For real iCloud data, install dependencies first. The CLI will automatically fall back to mock data if authentication fails or dependencies are missing.
+**⚠️ Important**: This CLI now **requires authentication** for all features. Install dependencies and log in to access your real iCloud data.
+
+**💡 Tip**: Using a virtual environment (`python3 -m venv`) is recommended to avoid conflicts with system Python packages.
 
 ## 📋 Features
 
@@ -198,11 +229,73 @@ See `agent.md` for detailed development instructions including:
 
 ## 📦 Dependencies
 
-Current dependencies are minimal for development:
+### Required for Real iCloud Data
 ```
-# requirements.txt
-# Add any required packages here
-# pyicloud for actual iCloud integration
+pyicloud>=1.0.1    # iCloud API access
+keyring>=24.2.0    # Secure credential storage
+requests>=2.31.0   # HTTP requests
+```
+
+### Installation Methods
+
+#### Virtual Environment (Recommended)
+```bash
+python3 -m venv icli_env
+source icli_env/bin/activate
+pip install -r requirements.txt
+```
+
+#### User Installation
+```bash
+pip install --user -r requirements.txt
+```
+
+#### System Installation
+```bash
+sudo pip install -r requirements.txt
+```
+
+### Troubleshooting Installation Issues
+
+#### "Externally Managed Environment" Error
+If you see this error:
+```
+error: externally-managed-environment
+```
+
+**Solutions:**
+
+1. **Use virtual environment (recommended)**:
+```bash
+python3 -m venv icli_env
+source icli_env/bin/activate
+pip install pyicloud keyring requests
+```
+
+2. **Use --user flag**:
+```bash
+pip install --user pyicloud keyring requests
+```
+
+3. **Use system package manager**:
+```bash
+sudo apt install python3-pip python3-venv  # Debian/Ubuntu
+sudo pip install pyicloud keyring requests
+```
+
+4. **Override protection (not recommended)**:
+```bash
+pip install --break-system-packages pyicloud keyring requests
+```
+
+#### Permission Errors
+```bash
+pip install --user pyicloud keyring requests
+```
+
+#### SSL Errors
+```bash
+pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pyicloud keyring requests
 ```
 
 ## 🚀 Roadmap
