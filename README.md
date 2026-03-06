@@ -1,6 +1,6 @@
 # iCloud CLI
 
-A command-line interface for interacting with iCloud services including Mail, Calendar, and iCloud Drive.
+A command-line interface for interacting with iCloud services including Calendar and iCloud Drive.
 
 ## 🚀 Quick Start
 
@@ -48,10 +48,11 @@ python test_security.py
 python test_ux_improvements.py
 python test_oauth.py
 python test_real_data_simple.py
+python test_drive_browser.py
 
 # Run demos
 python quickstart.py
-python demo_readonly.py
+python demo.py
 ```
 
 **⚠️ Important**: This CLI now **requires authentication** for all features. Install dependencies and log in to access your real iCloud data.
@@ -60,15 +61,6 @@ python demo_readonly.py
 
 ## 📋 Features
 
-### Mail Module ✅ (Read-Only with Real Data Support)
-- **Unread Email Overview**: Quick summary of unread emails with sender, subject, date, and preview
-- **Email Detail View**: Full email content with proper formatting
-- **Real Data Integration**: Loads emails from actual iCloud account (with authentication)
-- **Mock Data Fallback**: Uses sample data when not authenticated or for testing
-- **Email Management**: Mark as read only (reply, forward, delete disabled)
-- **Send Email**: Disabled in read-only mode
-- **Security Focus**: No write operations to protect email integrity
-
 ### Calendar Module 🚧 (Real Data Ready)
 - **List upcoming events**: From actual iCloud calendar (with authentication)
 - **Mock data fallback**: Sample events when not authenticated
@@ -76,12 +68,16 @@ python demo_readonly.py
 - Edit/delete existing events (planned)
 - Calendar selection support (planned)
 
-### iCloud Drive Module 🚧 (Real Data Ready)
-- **File listing**: From actual iCloud Drive (with authentication)
-- **Mock data fallback**: Sample file structure when not authenticated
-- Upload/download files (planned)
-- File metadata display (planned)
-- Folder navigation (planned)
+### iCloud Drive Module ✅ (Interactive File Browser)
+- **Interactive file tree browser**: Navigate directories with numbered selection
+- **Real-time directory listing**: Load files from actual iCloud Drive (with authentication)
+- **Intelligent file display**: Directories first, then files with emoji icons (📁/📄)
+- **Human-readable sizes**: Automatic formatting (KB, MB, GB, TB)
+- **Breadcrumb navigation**: Clear path display and parent directory access
+- **File details view**: Metadata, size, dates, and download options
+- **File caching**: Performance optimization for repeated navigation
+- **Interactive commands**: Navigate, refresh, download, quit
+- **Mock data fallback**: Sample structure when not authenticated
 
 ## 📂 Project Structure
 
@@ -89,16 +85,13 @@ python demo_readonly.py
 icli/
 ├── icli/                  # Main package
 │   ├── __init__.py        # Package initialization
-│   ├── mail.py            # Mail functionality
 │   ├── calendar.py        # Calendar functionality
 │   └── drive.py           # iCloud Drive functionality
 ├── main.py                # Main CLI entry point
 ├── demo.py                # Demo script
-├── demo_mail.py           # Mail demo
 ├── test_menu.py           # Menu tests
-├── test_mail.py           # Mail tests
+├── test_drive_browser.py  # Drive browser tests
 ├── README.md              # This file
-├── MAIL_FEATURES.md       # Mail feature documentation
 ├── agent.md               # Development guidelines
 ├── requirements.txt       # Dependencies
 └── setup.py               # Package configuration
@@ -183,20 +176,40 @@ The CLI now supports real iCloud data access through Apple ID authentication wit
 ### Main Menu
 ```
 === iCloud CLI ===
-1) Mail
-2) Calendar
-3) iCloud Drive
-4) Authentication  ← New!
-5) Exit
+1) Calendar
+2) iCloud Drive
+3) Authentication
+4) Exit
 ```
 
-### Mail Functionality (Read-Only)
-1. **List unread emails**: Shows overview of all unread emails
-2. **Read email**: Select an email number to view full content
-3. **Manage email**: Mark as read only (no write operations)
-4. **Send email**: ❌ Disabled in read-only mode
+### iCloud Drive Browser
+```
+=== iCloud Drive Browser ===
+📁 Navigating your iCloud Drive files
+Commands: [number] to enter, b=back, q=quit, r=refresh
 
-**Note**: This CLI operates in read-only mode for security. No emails can be sent, replied to, forwarded, or deleted.
+📁 iCloud Drive / Documents / Work
+
+📁 Contents (8 items):
+------------------------------------------------------------
+ 1. 📁 Projects/ 1.2 MB
+ 2. 📁 Archives/ 456.7 KB
+ 3. 📄 report.pdf 2.3 MB
+ 4. 📄 presentation.pptx 8.1 MB
+ 5. 📄 data.csv 1.5 KB
+
+📂 Enter choice:
+```
+
+**Navigation Commands:**
+- **Numbers (1-99)**: Enter directory or view file details
+- **b**: Go back to parent directory
+- **r**: Refresh file list (clear cache)
+- **q**: Quit browser
+
+**File Detail Options:**
+- **d**: Download this file
+- **b**: Back to directory listing
 
 ## 🔧 Development
 
@@ -222,10 +235,11 @@ python test_mail.py
 
 ### Development Guidelines
 See `agent.md` for detailed development instructions including:
-- Atomic commit requirements
+- **Autonomous atomic commit policy**
 - Code quality standards
 - API integration patterns
 - Testing strategy
+- **Documentation-first approach**
 
 ## 📦 Dependencies
 
@@ -302,10 +316,10 @@ pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pyiclo
 
 ### Phase 1: Core Functionality ✅
 - [x] Basic CLI structure with menu system
-- [x] Mail module with mock data
-- [x] Email listing and detail views
-- [x] Email management options
-- [x] Send email functionality
+- [x] Calendar module with mock data
+- [x] iCloud Drive interactive file browser
+- [x] File navigation and detail views
+- [x] Human-readable file sizes and caching
 
 ### Phase 2: API Integration 🚧
 - [ ] iCloud authentication (Apple ID + 2FA)
@@ -348,5 +362,5 @@ For questions or support, please open an issue on GitHub.
 ---
 
 **Project Status**: Active Development
-**Current Version**: 0.1.0
-**Last Updated**: March 2026
+**Current Version**: 0.2.0
+**Last Updated**: November 2024
