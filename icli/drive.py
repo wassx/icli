@@ -60,15 +60,9 @@ class DriveModule:
                 children = self.file_cache[cache_key]
             else:
                 print(f"📂 Loading: {self.current_path}...")
-                children = current_node.dir()  # This returns list of names, need to get full nodes
-                # Get full node objects for each child
-                files = []
-                for child_name in children:
-                    child_node = self._find_child_node(current_node, child_name)
-                    if child_node:
-                        files.append(child_node)
-                self.file_cache[cache_key] = files
-                children = files
+                # Get full node objects directly
+                children = current_node.get_children()
+                self.file_cache[cache_key] = children
             
             if not children:
                 print("📂 This directory is empty")
@@ -137,12 +131,7 @@ class DriveModule:
             if cache_key in self.file_cache:
                 children = self.file_cache[cache_key]
             else:
-                children_names = current_node.dir()
-                children = []
-                for child_name in children_names:
-                    child_node = self._find_child_node(current_node, child_name)
-                    if child_node:
-                        children.append(child_node)
+                children = current_node.get_children()
                 self.file_cache[cache_key] = children
             
             if 1 <= choice_num <= len(children):
@@ -152,9 +141,15 @@ class DriveModule:
                 node_type = "FOLDER" if selected_node.type == "folder" else "FILE"
                 
                 if node_type == "FOLDER":
-                    # Enter directory
+                    # Enter directory - update path and clear cache for new location
                     new_path = f"{self.current_path.rstrip('/')}/{selected_node.name}"
                     self.current_path = new_path
+                    
+                    # Clear cache for the new path since we're navigating to it
+                    if new_path in self.file_cache:
+                        del self.file_cache[new_path]
+                    
+                    print(f"📁 Entered directory: {self.current_path}")
                 else:
                     # Show file details
                     self._show_file_details(selected_node)
@@ -231,26 +226,48 @@ class DriveModule:
             print(f"❌ Download failed: {str(e)}")
     
     def _get_node_for_path(self, drive_service):
-        """Get the DriveNode for the current path"""
+        """Get the DriveNode for the current path by traversing from root"""
         if self.current_path == "/":
             return drive_service.root  # root is a property, not a method
         
-        # For now, return root since path navigation is complex
-        # In a full implementation, we'd traverse the path
-        return drive_service.root  # root is a property, not a method
+        # Traverse the path from root
+        current_node = drive_service.root
+        if not current_node:
+            return None
+        
+        # Skip empty path parts and root
+        path_parts = [p for p in self.current_path.split("/") if p and p != "/"]
+        
+        # Traverse each part of the path
+        for part in path_parts:
+            if not part:
+                continue
+            
+            # Find the child node with this name
+            found = False
+            children = current_node.get_children()
+            for child in children:
+                if child.name == part:
+                    current_node = child
+                    found = True
+                    break
+            
+            if not found:
+                print(f"❌ Could not find directory: {part}")
+                return None
+        
+        return current_node
     
     def _find_child_node(self, parent_node, child_name):
-        """Find a child node by name"""
-        # Get children and find the one with matching name
+        """Find a child node by name using get_children()"""
         try:
-            children_names = parent_node.dir()
-            for name in children_names:
-                if name == child_name:
-                    # Get the actual node object
-                    children = parent_node.get_children()
-                    for child in children:
-                        if child.name == child_name:
-                            return child
+            # Get all children as DriveNode objects
+            children = parent_node.get_children()
+            
+            # Find the child with matching name
+            for child in children:
+                if child.name == child_name:
+                    return child
             return None
         except Exception:
             return None
