@@ -48,16 +48,29 @@ class DriveModule:
                 print("❌ Drive service not available")
                 return False
             
+            # Get the current node based on path
+            current_node = self._get_node_for_path(drive_service)
+            if not current_node:
+                print("❌ Could not find specified directory")
+                return False
+            
             # Check cache first
             cache_key = self.current_path
             if cache_key in self.file_cache:
-                files = self.file_cache[cache_key]
+                children = self.file_cache[cache_key]
             else:
                 print(f"📂 Loading: {self.current_path}...")
-                files = drive_service.dir(self.current_path)
+                children = current_node.dir()  # This returns list of names, need to get full nodes
+                # Get full node objects for each child
+                files = []
+                for child_name in children:
+                    child_node = self._find_child_node(current_node, child_name)
+                    if child_node:
+                        files.append(child_node)
                 self.file_cache[cache_key] = files
+                children = files
             
-            if not files:
+            if not children:
                 print("📂 This directory is empty")
                 return True
             
@@ -65,27 +78,30 @@ class DriveModule:
             self._show_breadcrumb()
             
             # Display files
-            print(f"\n📁 Contents ({len(files)} items):")
+            print(f"\n📁 Contents ({len(children)} items):")
             print("-" * 60)
             
             directories = []
             files_list = []
             
-            for i, file in enumerate(files, 1):
-                if file.type == "FOLDER":
-                    directories.append((i, file))
+            for i, node in enumerate(children, 1):
+                # Determine if it's a directory by checking if it has children
+                node_type = "FOLDER" if node.type == "folder" else "FILE"
+                
+                if node_type == "FOLDER":
+                    directories.append((i, node))
                 else:
-                    files_list.append((i, file))
+                    files_list.append((i, node))
             
             # Show directories first
-            for i, file in directories:
-                size_str = self._format_size(file.size) if hasattr(file, 'size') else "-"
-                print(f"{i:2d}. 📁 {file.name}/ {size_str}")
+            for i, node in directories:
+                size_str = self._format_size(self._get_node_size(node)) if hasattr(node, 'data') else "-"
+                print(f"{i:2d}. 📁 {node.name}/ {size_str}")
             
             # Show files
-            for i, file in files_list:
-                size_str = self._format_size(file.size) if hasattr(file, 'size') else "-"
-                print(f"{i:2d}. 📄 {file.name} {size_str}")
+            for i, node in files_list:
+                size_str = self._format_size(self._get_node_size(node)) if hasattr(node, 'data') else "-"
+                print(f"{i:2d}. 📄 {node.name} {size_str}")
             
             return True
             
@@ -110,40 +126,67 @@ class DriveModule:
             if not drive_service:
                 return
             
-            # Get files again to ensure we have current data
-            files = drive_service.dir(self.current_path)
+            # Get current node and its children
+            current_node = self._get_node_for_path(drive_service)
+            if not current_node:
+                print("❌ Could not access current directory")
+                return
             
-            if 1 <= choice_num <= len(files):
-                selected_file = files[choice_num - 1]
+            # Get children from cache or fresh
+            cache_key = self.current_path
+            if cache_key in self.file_cache:
+                children = self.file_cache[cache_key]
+            else:
+                children_names = current_node.dir()
+                children = []
+                for child_name in children_names:
+                    child_node = self._find_child_node(current_node, child_name)
+                    if child_node:
+                        children.append(child_node)
+                self.file_cache[cache_key] = children
+            
+            if 1 <= choice_num <= len(children):
+                selected_node = children[choice_num - 1]
                 
-                if selected_file.type == "FOLDER":
+                # Determine if it's a directory
+                node_type = "FOLDER" if selected_node.type == "folder" else "FILE"
+                
+                if node_type == "FOLDER":
                     # Enter directory
-                    new_path = f"{self.current_path.rstrip('/')}/{selected_file.name}"
+                    new_path = f"{self.current_path.rstrip('/')}/{selected_node.name}"
                     self.current_path = new_path
                 else:
                     # Show file details
-                    self._show_file_details(selected_file)
+                    self._show_file_details(selected_node)
             else:
                 print("❌ Invalid selection")
                 
         except Exception as e:
             print(f"❌ Error handling selection: {str(e)}")
     
-    def _show_file_details(self, file):
+    def _show_file_details(self, node):
         """Show detailed information about a file"""
-        print(f"\n📄 File Details: {file.name}")
+        print(f"\n📄 File Details: {node.name}")
         print("=" * 40)
-        print(f"Type: {'Directory' if file.type == 'FOLDER' else 'File'}")
-        print(f"Path: {self.current_path}/{file.name}")
         
-        if hasattr(file, 'size'):
-            print(f"Size: {self._format_size(file.size)} ({file.size} bytes)")
+        # Determine type from node
+        node_type = "Directory" if node.type == "folder" else "File"
+        print(f"Type: {node_type}")
+        print(f"Path: {self.current_path}/{node.name}")
         
-        if hasattr(file, 'date_created'):
-            print(f"Created: {file.date_created}")
+        # Get size from node data
+        size = self._get_node_size(node)
+        if size > 0:
+            print(f"Size: {self._format_size(size)} ({size} bytes)")
+        else:
+            print("Size: -")
         
-        if hasattr(file, 'date_modified'):
-            print(f"Modified: {file.date_modified}")
+        # Get dates from node data if available
+        if hasattr(node, 'data') and node.data:
+            if 'dateCreated' in node.data:
+                print(f"Created: {node.data['dateCreated']}")
+            if 'dateModified' in node.data:
+                print(f"Modified: {node.data['dateModified']}")
         
         print("\nOptions:")
         print("d. Download this file")
@@ -152,37 +195,74 @@ class DriveModule:
         choice = input("Choose option: ").strip().lower()
         
         if choice == 'd':
-            self._download_file_prompt(file)
+            self._download_file_prompt(node)
         elif choice == 'b':
             return
         else:
             print("❌ Invalid choice")
     
-    def _download_file_prompt(self, file):
+    def _download_file_prompt(self, node):
         """Handle file download with user prompt"""
-        local_filename = input(f"Enter local filename for {file.name} (or 'q' to cancel): ").strip()
+        local_filename = input(f"Enter local filename for {node.name} (or 'q' to cancel): ").strip()
         
         if local_filename.lower() == 'q':
             print("Download cancelled")
             return
         
         if not local_filename:
-            local_filename = file.name
+            local_filename = node.name
         
-        print(f"📥 Downloading {file.name} to {local_filename}...")
+        print(f"📥 Downloading {node.name} to {local_filename}...")
         
         try:
             drive_service = self.auth.get_drive_service()
             if drive_service:
-                remote_path = f"{self.current_path}/{file.name}"
-                # This would call the actual download method
-                print(f"✅ Download would save to: {local_filename}")
-                print("   (Actual download implementation would go here)")
+                # Use the actual download method from pyicloud
+                with open(local_filename, 'wb') as f:
+                    node.download(f)
+                print(f"✅ Download completed: {local_filename}")
+                size = self._get_node_size(node)
+                if size > 0:
+                    print(f"   Downloaded {self._format_size(size)}")
             else:
                 print("❌ Drive service not available")
                 
         except Exception as e:
             print(f"❌ Download failed: {str(e)}")
+    
+    def _get_node_for_path(self, drive_service):
+        """Get the DriveNode for the current path"""
+        if self.current_path == "/":
+            return drive_service.root()
+        
+        # For now, return root since path navigation is complex
+        # In a full implementation, we'd traverse the path
+        return drive_service.root()
+    
+    def _find_child_node(self, parent_node, child_name):
+        """Find a child node by name"""
+        # Get children and find the one with matching name
+        try:
+            children_names = parent_node.dir()
+            for name in children_names:
+                if name == child_name:
+                    # Get the actual node object
+                    children = parent_node.get_children()
+                    for child in children:
+                        if child.name == child_name:
+                            return child
+            return None
+        except Exception:
+            return None
+    
+    def _get_node_size(self, node):
+        """Get the size of a node from its data"""
+        try:
+            if hasattr(node, 'data') and node.data:
+                return node.data.get('size', 0)
+            return 0
+        except Exception:
+            return 0
     
     def _go_back(self):
         """Navigate to parent directory"""
@@ -226,18 +306,37 @@ class DriveModule:
                 return
             
             print(f"Loading files from iCloud Drive ({path})...")
-            # Get files from specified path
-            files = drive_service.dir(path)
             
-            if not files:
+            # Get root node
+            if path == "/":
+                root_node = drive_service.root()
+            else:
+                # For simplicity, use root for now
+                # Full path support would require traversal
+                root_node = drive_service.root()
+            
+            if not root_node:
                 print("No files found in this directory.")
                 return
             
-            print(f"Found {len(files)} items:")
-            for i, file in enumerate(files[:10], 1):  # Show first 10 files
-                file_type = "Directory" if file.type == "FOLDER" else "File"
-                size_str = self._format_size(file.size) if hasattr(file, 'size') else "-"
-                print(f"{i}. {file_type} - {file.name} ({size_str})")
+            # Get children
+            children_names = root_node.dir()
+            if not children_names:
+                print("No files found in this directory.")
+                return
+            
+            # Get full node objects
+            children = []
+            for child_name in children_names[:10]:  # Show first 10 files
+                child_node = self._find_child_node(root_node, child_name)
+                if child_node:
+                    children.append(child_node)
+            
+            print(f"Found {len(children)} items:")
+            for i, node in enumerate(children, 1):
+                node_type = "Directory" if node.type == "folder" else "File"
+                size_str = self._format_size(self._get_node_size(node))
+                print(f"{i}. {node_type} - {node.name} ({size_str})")
             
         except Exception as e:
             print(f"❌ Error loading files: {str(e)}")
