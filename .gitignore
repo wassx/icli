@@ -26,3 +26,4 @@ icli_env/
 
 # OS
 .DS_Store
+icli/__pycache__/
