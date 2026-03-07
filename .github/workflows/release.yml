@@ -53,6 +53,54 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          # Find the previous tag (exclude current)
+          CURRENT_TAG="${GITHUB_REF_NAME}"
+          PREV_TAG=$(git tag --sort=-creatordate | grep -v "^${CURRENT_TAG}$" | head -n1)
+
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          {
+            echo "body<<RELEASE_NOTES_EOF"
+            echo "## What's Changed"
+            echo ""
+
+            # Group commits by conventional-commit prefix
+            for prefix_label in "feat:Features" "fix:Bug Fixes" "docs:Documentation" "ci:CI/CD" "refactor:Refactoring" "perf:Performance" "test:Tests"; do
+              prefix="${prefix_label%%:*}"
+              label="${prefix_label##*:}"
+              items=$(git log "$RANGE" --pretty=format:"- %s" --grep="^${prefix}" 2>/dev/null || true)
+              if [ -n "$items" ]; then
+                echo "### ${label}"
+                echo "$items"
+                echo ""
+              fi
+            done
+
+            # Uncategorised commits (no conventional prefix)
+            other=$(git log "$RANGE" --pretty=format:"%s" \
+              | grep -v -E "^(feat|fix|docs|ci|refactor|perf|test)" || true)
+            if [ -n "$other" ]; then
+              echo "### Other"
+              echo "$other" | sed 's/^/- /'
+              echo ""
+            fi
+
+            echo "---"
+            echo "**Full changelog:** https://github.com/${{ github.repository }}/compare/${PREV_TAG:-initial}...${CURRENT_TAG}"
+            echo "RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -62,5 +110,5 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body: ${{ steps.notes.outputs.body }}
           files: artifacts/*
