@@ -7,6 +7,55 @@ class CalendarModule:
         self.auth = auth
         self._use_real_data = True  # Always use real data (no mock)
     
+    def _safe_format_date(self, date_obj, format_str):
+        """Safely format date objects, handling various API return formats"""
+        try:
+            if date_obj is None:
+                return "Unknown"
+            
+            # Handle list format (Apple's 7-element date array)
+            if isinstance(date_obj, list) and len(date_obj) >= 7:
+                # Apple format: [YYYYMMDD, YYYY, MM, DD, HH, MM, minutes_from_midnight]
+                year = date_obj[1]
+                month = date_obj[2]
+                day = date_obj[3]
+                hour = date_obj[4]
+                minute = date_obj[5]
+                
+                # Create datetime object
+                from datetime import datetime
+                dt = datetime(year, month, day, hour, minute)
+                return dt.strftime(format_str)
+            
+            # Handle datetime objects
+            elif hasattr(date_obj, 'strftime'):
+                return date_obj.strftime(format_str)
+            
+            # Handle string dates
+            elif isinstance(date_obj, str):
+                # Try to parse common date string formats
+                from datetime import datetime
+                try:
+                    # Try ISO format first
+                    dt = datetime.fromisoformat(date_obj)
+                    return dt.strftime(format_str)
+                except ValueError:
+                    # Try other common formats
+                    for fmt in ["%Y-%m-%d", "%Y%m%d", "%m/%d/%Y"]:
+                        try:
+                            dt = datetime.strptime(date_obj, fmt)
+                            return dt.strftime(format_str)
+                        except ValueError:
+                            continue
+                    return "Unknown"
+            
+            # Fallback
+            return str(date_obj)
+            
+        except Exception as e:
+            print(f"⚠️  Error formatting date {date_obj}: {e}")
+            return "Unknown"
+    
     def list_calendars(self):
         """List all available calendars"""
         if not self.auth or not self.auth.is_authenticated():
@@ -129,16 +178,21 @@ class CalendarModule:
     
     def _format_event_for_display(self, event, index):
         """Format event information for display"""
-        # Format date and time
-        if event.all_day:
-            date_str = event.start_date.strftime("%a, %b %d, %Y")
-            time_str = "All Day"
-        else:
-            date_str = event.start_date.strftime("%a, %b %d, %Y")
-            time_str = event.start_date.strftime("%I:%M %p")
-            if event.end_date:
-                end_time_str = event.end_date.strftime("%I:%M %p")
-                time_str += f" - {end_time_str}"
+        # Format date and time with proper type checking
+        try:
+            if event.all_day:
+                date_str = self._safe_format_date(event.start_date, "%a, %b %d, %Y")
+                time_str = "All Day"
+            else:
+                date_str = self._safe_format_date(event.start_date, "%a, %b %d, %Y")
+                time_str = self._safe_format_date(event.start_date, "%I:%M %p")
+                if event.end_date:
+                    end_time_str = self._safe_format_date(event.end_date, "%I:%M %p")
+                    time_str += f" - {end_time_str}"
+        except Exception as e:
+            print(f"⚠️  Error formatting event dates: {e}")
+            date_str = "Unknown date"
+            time_str = "Unknown time"
         
         # Build display string
         title = event.title if event.title else "Untitled Event"
@@ -179,31 +233,41 @@ class CalendarModule:
         
         # Dates and Times
         print("\n📅 When:")
-        if event.all_day:
-            if event.start_date and event.end_date:
-                start_str = event.start_date.strftime("%A, %B %d, %Y")
-                end_str = event.end_date.strftime("%A, %B %d, %Y")
-                if start_str == end_str:
-                    print(f"  All Day on {start_str}")
+        try:
+            if event.all_day:
+                if event.start_date and event.end_date:
+                    start_str = self._safe_format_date(event.start_date, "%A, %B %d, %Y")
+                    end_str = self._safe_format_date(event.end_date, "%A, %B %d, %Y")
+                    if start_str == end_str:
+                        print(f"  All Day on {start_str}")
+                    else:
+                        print(f"  {start_str} to {end_str} (All Day)")
                 else:
-                    print(f"  {start_str} to {end_str} (All Day)")
+                    print(f"  All Day Event")
             else:
-                print(f"  All Day Event")
-        else:
-            if event.start_date:
-                print(f"  Starts: {event.start_date.strftime('%A, %B %d, %Y at %I:%M %p')}")
-            if event.end_date:
-                print(f"  Ends:   {event.end_date.strftime('%A, %B %d, %Y at %I:%M %p')}")
-                duration = event.end_date - event.start_date
-                days = duration.days
-                hours, remainder = divmod(duration.seconds, 3600)
-                minutes = remainder // 60
-                if days > 0:
-                    print(f"  Duration: {days} days, {hours} hours, {minutes} minutes")
-                elif hours > 0:
-                    print(f"  Duration: {hours} hours, {minutes} minutes")
-                else:
-                    print(f"  Duration: {minutes} minutes")
+                if event.start_date:
+                    print(f"  Starts: {self._safe_format_date(event.start_date, '%A, %B %d, %Y at %I:%M %p')}")
+                if event.end_date:
+                    print(f"  Ends:   {self._safe_format_date(event.end_date, '%A, %B %d, %Y at %I:%M %p')}")
+                    # Calculate duration safely
+                    try:
+                        if hasattr(event.start_date, '__sub__') and hasattr(event.end_date, '__sub__'):
+                            duration = event.end_date - event.start_date
+                            days = duration.days
+                            hours, remainder = divmod(duration.seconds, 3600)
+                            minutes = remainder // 60
+                            if days > 0:
+                                print(f"  Duration: {days} days, {hours} hours, {minutes} minutes")
+                            elif hours > 0:
+                                print(f"  Duration: {hours} hours, {minutes} minutes")
+                            else:
+                                print(f"  Duration: {minutes} minutes")
+                    except Exception:
+                        print(f"  Duration: Unknown")
+        except Exception as e:
+            print(f"⚠️  Error displaying event dates: {e}")
+            print(f"  Start: {getattr(event, 'start_date', 'Unknown')}")
+            print(f"  End: {getattr(event, 'end_date', 'Unknown')}")
         
         # Location
         if event.location:
