@@ -38,6 +38,17 @@ sudo mv icli /usr/local/bin/
 icli --help
 ```
 
+Or install without `sudo`:
+
+```bash
+chmod +x icli-linux-amd64
+mkdir -p ~/.local/bin
+mv icli-linux-amd64 ~/.local/bin/icli
+# Make sure ~/.local/bin is in your PATH (add to ~/.bashrc if needed):
+# export PATH="$HOME/.local/bin:$PATH"
+icli --help
+```
+
 **Windows (PowerShell):**
 
 ```powershell
