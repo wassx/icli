@@ -43,7 +43,7 @@ class CalendarModule:
                 calendar_list.append(calendar_info)
                 
                 # Show calendar info
-                symbol = "📅 " if calendar.is_primary else "📆 "
+                symbol = "📅 " if getattr(calendar, 'is_default', False) else "📆 "
                 print(f"{i:2d}. {symbol}{calendar.title}")
                 if calendar.description:
                     print(f"     {calendar.description}")
