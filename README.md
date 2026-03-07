@@ -153,6 +153,37 @@ icli
 Enter your choice (1-4):
 ```
 
+### Browsing & downloading in the interactive Drive browser
+
+Select **2) iCloud Drive** to open the file browser. Navigate with numbers,
+then press **d** on any file to download it:
+
+```
+📁 Contents (3 items):
+─────────────────────────────
+ 0. 📁 .. (Parent Directory)
+ 1. 📁 Documents/ 1.2 MB
+ 2. 📄 photo.jpg 3.0 MB
+ 3. 📄 report.pdf 600.0 KB
+
+📂 Enter choice (number, 0=up, r=refresh, b/q=quit): 3
+
+📄 File Details: report.pdf
+─────────────────────────────
+Type:  File
+Path:  /report.pdf
+Size:  600.0 KB (614,400 bytes)
+
+Options:
+d. Download this file
+b. Back to directory listing
+
+Choose option (d/b): d
+Enter local filename for report.pdf (or 'q' to cancel):
+📥 Downloading report.pdf to report.pdf...
+✅ Download completed: report.pdf
+```
+
 ---
 
 ## Non-interactive CLI
