@@ -36,6 +36,11 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Run tests
+        run: |
+          for f in tests/test_*.py; do python "$f"; done
+        shell: bash
+
       - name: Build binary
         run: |
           FIDO2_DIR=$(python -c "import fido2, os; print(os.path.dirname(fido2.__file__))")
