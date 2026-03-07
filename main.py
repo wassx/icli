@@ -110,7 +110,7 @@ def handle_menu_choice(choice, cli):
         print("2) Search files")
         print("3) List files (simple)")
         print("4) Back to main menu")
-        drive_choice = input("\nEnter your choice: ").strip()
+        drive_choice = input("\nEnter your choice (1-4): ").strip()
         if drive_choice == "1":
             cli.drive.browse_files()
         elif drive_choice == "2":
@@ -270,7 +270,7 @@ def _handle_drive_search(drive_module):
     
     if results:
         print(f"\n📂 {len(results)} result(s) found. Enter a result number to navigate to it, or press Enter to go back.")
-        result_choice = input("Result number: ").strip()
+        result_choice = input(f"Enter result number (1-{len(results)}, Enter=back): ").strip()
         if result_choice.isdigit():
             result_index = int(result_choice) - 1
             if 0 <= result_index < len(results):

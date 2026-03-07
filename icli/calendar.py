@@ -155,7 +155,7 @@ class CalendarModule:
             
             if not events:
                 print(f"ℹ️  No upcoming events in the next {days_ahead} days.")
-                extend = input("   Show a wider range? Enter number of days (or Enter to skip): ").strip()
+                extend = input(f"   Show a wider range? Enter days to look ahead (current: {days_ahead}, Enter=skip): ").strip()
                 if extend.isdigit() and int(extend) > 0:
                     return self.list_events(calendar_index, days_ahead=int(extend))
                 return []
@@ -382,8 +382,7 @@ class CalendarModule:
                             else:
                                 print("❌ Invalid choice")
                         else:
-                            print("   No events found. Press Enter to choose a different calendar.")
-                            input()
+                            input("   No events found. Press Enter to choose a different calendar...")
                     else:
                         print(f"❌ Please enter a number between 1 and {len(calendars)}")
                 else:
@@ -517,9 +516,9 @@ class CalendarModule:
         print("1. View specific day")
         print("2. Back to calendar menu")
         
-        choice = input("\nEnter your choice: ").strip()
+        choice = input("\nEnter your choice (1-2): ").strip()
         if choice == "1":
-            day_choice = input("Enter day number (1-31): ").strip()
+            day_choice = input(f"Enter day number (1-{num_days}): ").strip()
             if day_choice.isdigit():
                 day_num = int(day_choice)
                 if 1 <= day_num <= num_days:
@@ -549,9 +548,9 @@ class CalendarModule:
         print("1. View event details")
         print("2. Back to grid view")
         
-        choice = input("\nEnter your choice: ").strip()
+        choice = input("\nEnter your choice (1-2): ").strip()
         if choice == "1":
-            event_choice = input("Enter event number: ").strip()
+            event_choice = input(f"Enter event number (1-{len(events)}): ").strip()
             if event_choice.isdigit():
                 event_index = int(event_choice) - 1
                 if 0 <= event_index < len(events):

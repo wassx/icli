@@ -31,7 +31,7 @@ class DriveModule:
                     break
                 
                 # Get user input
-                choice = input("\n📂 Enter choice: ").strip().lower()
+                choice = input("\n📂 Enter choice (number, 0=up, r=refresh, b/q=quit): ").strip().lower()
                 
                 if choice in ('q', 'b'):
                     print("Exiting iCloud Drive browser...")
