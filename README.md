@@ -23,8 +23,7 @@ Download the latest binary for your platform from
 | Platform | File |
 |----------|------|
 | Linux x86_64 | `icli-linux-amd64` |
-| macOS Apple Silicon | `icli-macos-arm64` |
-| macOS Intel | `icli-macos-amd64` |
+| macOS (Apple Silicon & Intel via Rosetta) | `icli-macos-arm64` |
 | Windows x86_64 | `icli-windows-amd64.exe` |
 
 **Linux / macOS:**

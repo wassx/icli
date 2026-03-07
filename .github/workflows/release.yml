@@ -18,9 +18,6 @@ jobs:
             artifact: icli-linux-amd64
           - os: macos-latest
             artifact: icli-macos-arm64
-          - os: macos-latest
-            artifact: icli-macos-amd64
-            arch: x86_64
           - os: windows-latest
             artifact: icli-windows-amd64.exe
 
@@ -41,11 +38,7 @@ jobs:
 
       - name: Build binary
         run: |
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then
-            arch -x86_64 pyinstaller --onefile --name "${{ matrix.artifact }}" --add-data "icli:icli" --target-arch x86_64 main.py
-          else
-            pyinstaller --onefile --name "${{ matrix.artifact }}" --add-data "icli:icli" main.py
-          fi
+          pyinstaller --onefile --name "${{ matrix.artifact }}" --add-data "icli:icli" main.py
         shell: bash
 
       - name: Upload artifact
