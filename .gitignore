@@ -26,3 +26,5 @@ icli_env/
 
 # OS
 .DS_Store
+
+.env
