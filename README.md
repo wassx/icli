@@ -7,7 +7,7 @@
 |_|\___|____|___|
 ```
 
-Command-line interface and Python API for **iCloud Calendar** and **iCloud Drive**.
+Command-line interface and Python API for **iCloud Calendar**, **iCloud Drive**, and **iCloud Mail**.
 
 > Read-only. iCLI never modifies or deletes any iCloud data.
 
@@ -124,6 +124,15 @@ icli drive search --type pdf --min 500 --json
 # Download a file
 icli drive download /Documents/report.pdf
 icli drive download /Documents/report.pdf -o ~/Downloads/report.pdf --json
+
+# List mail folders
+icli mail folders --json
+
+# Latest 20 inbox emails
+icli mail list --json
+
+# Read a specific email by UID
+icli mail read 12345 --json
 ```
 
 All commands support `--json` for machine-readable output.
@@ -310,6 +319,12 @@ results = api.search_files(query="report", file_type="pdf", min_size=500*1024)
 result = api.download_file("/Documents/report.pdf")
 result = api.download_file("/Documents/report.pdf", local_path="~/Downloads/")
 # {"ok": True, "local_path": "/home/user/Downloads/report.pdf", ...}
+
+# Mail
+folders = api.list_mail_folders()
+emails = api.list_emails(folder="INBOX", limit=10)
+full = api.get_email(uid="12345")
+# {"subject": "Meeting", "body_text": "Hi, ...", "attachments": [...], ...}
 ```
 
 All methods return plain `dict`/`list` objects safe for `json.dumps()`.  
@@ -354,6 +369,12 @@ icli drive search --type pdf --min 10240 --json \
 icli drive search --type pdf --json \
   | jq -r '.[].path' \
   | while read -r p; do icli drive download "$p" -o ./pdfs/; done
+
+# List unread email subjects
+icli mail list --json | jq '[.[] | select(.seen == false)] | .[].subject'
+
+# Get email body as plain text
+icli mail read 12345 --json | jq -r '.body_text'
 ```
 
 ---
@@ -384,6 +405,14 @@ drive
     --max NKB         Maximum size in KB
   download PATH       Download a file locally
     -o, --output FILE Local destination (default: cwd)
+
+mail
+  folders             List mail folders
+  list                List recent emails
+    --folder FOLDER   Mail folder (default: INBOX)
+    --limit N         Number of emails (default: 20)
+  read UID            Read a specific email
+    --folder FOLDER   Mail folder (default: INBOX)
 ```
 
 Full reference: [docs/cli-reference.md](docs/cli-reference.md)  
@@ -400,6 +429,7 @@ icli/
   auth.py       Session management, 2FA, keyring
   calendar.py   Calendar module
   drive.py      Drive module
+  mail.py       Mail module (IMAP)
   utils.py      Spinner, separator
 main.py         Interactive menu + argparse dispatcher
 docs/           CLI reference, API docs, auth guide

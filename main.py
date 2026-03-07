@@ -26,13 +26,14 @@ def show_main_menu(cli):
     print(f"\n=== iCloud CLI - {auth_status} ===")
     print("1) Calendar")
     print("2) iCloud Drive")
-    print("3) Authentication")
-    print("4) Exit")
+    print("3) iCloud Mail")
+    print("4) Authentication")
+    print("5) Exit")
     print("\n" + separator("-"))
 
 def handle_menu_choice(choice, cli):
     """Handle the user's menu choice"""
-    if choice == "3":
+    if choice == "4":
         print("\n=== Authentication ===")
         auth_status = "Logged in" if cli.auth.is_authenticated() else "Not logged in"
         print(f"Current status: {auth_status}")
@@ -87,7 +88,7 @@ def handle_menu_choice(choice, cli):
                 return True
             else:
                 print("❌ Invalid choice. Please enter 1-2.")
-    elif choice == "4":
+    elif choice == "5":
         print("\nGoodbye!")
         return False
     elif choice == "1":
@@ -122,6 +123,18 @@ def handle_menu_choice(choice, cli):
         elif drive_choice == "3":
             cli.drive.list_files()
         elif drive_choice == "4":
+            return True
+    elif choice == "3":
+        print("\n=== iCloud Mail ===")
+        print("1) Inbox overview")
+        print("2) Browse folders")
+        print("3) Back to main menu")
+        mail_choice = input("\nEnter your choice (1-3): ").strip()
+        if mail_choice == "1":
+            cli.mail.show_inbox()
+        elif mail_choice == "2":
+            cli.mail.browse_folders()
+        elif mail_choice == "3":
             return True
 
     else:
@@ -181,10 +194,10 @@ def main():
     try:
         while running:
             show_main_menu(cli)
-            choice = input("\nEnter your choice (1-4): ").strip()
+            choice = input("\nEnter your choice (1-5): ").strip()
             
             # Check if authentication is needed for this choice
-            if choice in ["1", "2"] and not cli.auth.is_authenticated():
+            if choice in ["1", "2", "3"] and not cli.auth.is_authenticated():
                 # Offer login before accessing a service
                 if not require_authentication(cli):
                     continue
@@ -192,7 +205,7 @@ def main():
             running = handle_menu_choice(choice, cli)
             
             # If a service call caused session expiry mid-use, offer re-login
-            if running and choice in ["1", "2"] and not cli.auth.is_authenticated():
+            if running and choice in ["1", "2", "3"] and not cli.auth.is_authenticated():
                 print("\n⚠️  Your session expired during this operation.")
                 relogin = input("   Log in again now? (y/n): ").strip().lower()
                 if relogin == "y":
@@ -401,6 +414,24 @@ def run_cli():
     dl_p.add_argument("-o", "--output", dest="local_path", metavar="FILE",
                       help="Local destination file or directory (default: current dir)")
 
+    # ── mail ──────────────────────────────────────────────────────────────────
+    mail_p = sub.add_parser("mail", help="iCloud Mail commands")
+    mail_sub = mail_p.add_subparsers(dest="mail_cmd", required=True, metavar="SUBCOMMAND")
+    mail_sub.add_parser("folders", parents=[_json],
+                         help="List mail folders")
+    ml_p = mail_sub.add_parser("list", parents=[_json],
+                                help="List recent emails")
+    ml_p.add_argument("--folder", default="INBOX", metavar="FOLDER",
+                      help="Mail folder (default: INBOX)")
+    ml_p.add_argument("--limit", type=int, default=20, metavar="N",
+                      help="Number of emails to fetch (default: 20)")
+    mr_p = mail_sub.add_parser("read", parents=[_json],
+                                help="Read a specific email by UID")
+    mr_p.add_argument("uid", metavar="UID",
+                      help="Email UID (from 'mail list' output)")
+    mr_p.add_argument("--folder", default="INBOX", metavar="FOLDER",
+                      help="Mail folder (default: INBOX)")
+
     args = parser.parse_args()
     use_json = args.json
     apple_id = args.apple_id or os.environ.get("ICLOUD_APPLE_ID")
@@ -478,6 +509,16 @@ def run_cli():
                     if not result.get("ok"):
                         die(result.get("error", "Download failed"))
                     out(result)
+
+            elif args.command == "mail":
+                if args.mail_cmd == "folders":
+                    out(_quiet(api.list_mail_folders))
+                elif args.mail_cmd == "list":
+                    out(_quiet(api.list_emails,
+                               folder=args.folder, limit=args.limit))
+                elif args.mail_cmd == "read":
+                    out(_quiet(api.get_email,
+                               uid=args.uid, folder=args.folder))
 
     except (RuntimeError, ValueError) as exc:
         die(str(exc))

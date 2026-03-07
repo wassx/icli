@@ -29,10 +29,12 @@ class ICloudAPI:
         from icli.auth import iCloudAuth
         from icli.drive import DriveModule
         from icli.calendar import CalendarModule
+        from icli.mail import MailModule
 
         self.auth = iCloudAuth()
         self._drive = DriveModule(self.auth)
         self._calendar = CalendarModule(self.auth)
+        self._mail = MailModule(self.auth)
 
     # ── Authentication ────────────────────────────────────────────────────────
 
@@ -225,6 +227,35 @@ class ICloudAPI:
         """
         self._require_auth()
         return self._drive.download_file(remote_path, local_path)
+
+    # ── Mail ──────────────────────────────────────────────────────────────────
+
+    def list_mail_folders(self):
+        """Return a list of mailbox folder names.
+
+        Returns a list of strings, e.g. ``['INBOX', 'Sent Messages', 'Drafts', ...]``.
+        """
+        self._require_auth()
+        return self._mail.list_folders()
+
+    def list_emails(self, folder="INBOX", limit=20):
+        """Fetch the latest *limit* email headers from *folder*.
+
+        Returns a list of dicts (newest first):
+          uid, subject, from_name, from_address, date, date_iso, seen
+        """
+        self._require_auth()
+        return self._mail.list_emails(folder=folder, limit=limit)
+
+    def get_email(self, uid, folder="INBOX"):
+        """Fetch the full content of one email by UID.
+
+        Returns a dict with:
+          uid, subject, from_name, from_address, to, date, date_iso,
+          body_text, body_html, attachments
+        """
+        self._require_auth()
+        return self._mail.get_email(uid=uid, folder=folder)
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 

@@ -1,41 +1,43 @@
 #!/usr/bin/env python3
-"""Test script for mail functionality"""
+"""Smoke tests for the mail module (import and structure only — no IMAP connection)."""
 
 from icli.mail import MailModule
 
-def test_mail_functionality():
-    """Test the mail module functionality"""
-    print("=== Testing Mail Functionality ===\n")
-    
+
+def test_import():
+    """MailModule can be imported and instantiated without auth."""
     mail = MailModule()
-    
-    # Test listing emails
-    print("1. Testing list_emails() with mock data:")
-    print("-" * 50)
-    
-    # We'll simulate user input for testing
-    import io
-    import sys
-    
-    # Test case 1: List emails and read first one
-    test_input_1 = "1\n4\n5\n"
-    print(f"Simulating input: {repr(test_input_1)}")
-    
-    # Save original stdin
-    original_stdin = sys.stdin
-    try:
-        sys.stdin = io.StringIO(test_input_1)
-        mail.list_emails()
-    except EOFError:
-        pass  # Expected when using StringIO
-    finally:
-        sys.stdin = original_stdin
-    
-    print("\n2. Testing send_email():")
-    print("-" * 50)
-    mail.send_email("test@example.com", "Test Subject", "This is a test email body.")
-    
-    print("\n✓ Mail functionality test completed!")
+    assert mail.auth is None
+    assert mail._conn is None
+
+
+def test_methods_exist():
+    """Public API surface check."""
+    mail = MailModule()
+    for name in ("list_folders", "list_emails", "get_email",
+                 "show_inbox", "browse_folders", "disconnect"):
+        assert callable(getattr(mail, name, None)), f"Missing method: {name}"
+
+
+def test_decode_header_plain():
+    assert MailModule._decode_header("Hello World") == "Hello World"
+
+
+def test_decode_header_empty():
+    assert MailModule._decode_header("") == ""
+    assert MailModule._decode_header(None) == ""
+
+
+def test_format_size():
+    assert MailModule._format_size(500) == "500.0 B"
+    assert MailModule._format_size(1024) == "1.0 KB"
+    assert MailModule._format_size(1048576) == "1.0 MB"
+
 
 if __name__ == "__main__":
-    test_mail_functionality()
+    test_import()
+    test_methods_exist()
+    test_decode_header_plain()
+    test_decode_header_empty()
+    test_format_size()
+    print("✓ All mail smoke tests passed!")

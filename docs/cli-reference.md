@@ -242,6 +242,79 @@ python main.py drive download /Photos/vacation.jpg -o ./local.jpg --json
 
 ---
 
+## Mail
+
+### `mail folders [--json]`
+
+List all mail folders (IMAP mailboxes).
+
+```bash
+python main.py mail folders --json
+```
+
+Returns a list of folder name strings, e.g. `["INBOX", "Sent Messages", "Drafts", ...]`.
+
+---
+
+### `mail list [--folder FOLDER] [--limit N] [--json]`
+
+List the most recent emails in a folder.
+
+```bash
+python main.py mail list --json
+python main.py mail list --folder "Sent Messages" --limit 10 --json
+```
+
+| Argument / Option | Description |
+|-------------------|-------------|
+| `--folder FOLDER` | Mail folder (default: `INBOX`) |
+| `--limit N` | Number of emails to fetch (default: `20`) |
+
+**Output fields per email:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `uid` | str | Unique email ID (use with `mail read`) |
+| `subject` | str | Email subject |
+| `from_name` | str | Sender display name |
+| `from_address` | str | Sender email address |
+| `date` | str | Date as `YYYY-MM-DD HH:MM` |
+| `date_iso` | str | ISO 8601 timestamp |
+| `seen` | bool | Whether the email has been read |
+
+---
+
+### `mail read UID [--folder FOLDER] [--json]`
+
+Read the full content of a specific email.
+
+```bash
+python main.py mail read 12345 --json
+python main.py mail read 12345 --folder "Sent Messages" --json
+```
+
+| Argument / Option | Description |
+|-------------------|-------------|
+| `UID` | Email UID from `mail list` output |
+| `--folder FOLDER` | Mail folder (default: `INBOX`) |
+
+**Output fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `uid` | str | Email UID |
+| `subject` | str | Subject line |
+| `from_name` | str | Sender display name |
+| `from_address` | str | Sender email address |
+| `to` | str | Recipient(s) |
+| `date` | str | Date as `YYYY-MM-DD HH:MM` |
+| `date_iso` | str | ISO 8601 timestamp |
+| `body_text` | str | Plain-text body |
+| `body_html` | str | HTML body (if available) |
+| `attachments` | list | `[{filename, size, content_type}, ...]` |
+
+---
+
 ## `--json` flag
 
 Append `--json` to any leaf command to get machine-readable output on `stdout`.

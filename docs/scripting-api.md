@@ -266,6 +266,84 @@ result = api.download_file("/Documents/report.pdf", local_path="/tmp/")
 
 ---
 
+## Mail
+
+### `ICloudAPI.list_mail_folders() → list[str]`
+
+Return all mailbox folder names.
+
+```python
+folders = api.list_mail_folders()
+# ["INBOX", "Sent Messages", "Drafts", "Trash", "Archive", ...]
+```
+
+---
+
+### `ICloudAPI.list_emails(folder="INBOX", limit=20) → list[dict]`
+
+Fetch the latest *limit* email headers from *folder* (newest first).
+
+```python
+emails = api.list_emails(limit=10)
+# [{"uid": "12345", "subject": "Meeting", "from_name": "John", ...}, ...]
+
+sent = api.list_emails(folder="Sent Messages", limit=5)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `folder` | str | IMAP folder name (default: `"INBOX"`) |
+| `limit` | int | Number of emails to fetch (default: `20`) |
+
+**Result dict fields:**
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `uid` | str | Unique email ID |
+| `subject` | str | Email subject |
+| `from_name` | str | Sender display name |
+| `from_address` | str | Sender email address |
+| `date` | str | `YYYY-MM-DD HH:MM` |
+| `date_iso` | str | ISO 8601 timestamp |
+| `seen` | bool | Read/unread status |
+
+---
+
+### `ICloudAPI.get_email(uid, folder="INBOX") → dict`
+
+Fetch the full content of one email.
+
+```python
+email = api.get_email("12345")
+print(email["body_text"])
+
+# With attachments info
+for att in email["attachments"]:
+    print(f"  {att['filename']} ({att['size']} bytes)")
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `uid` | str | Email UID from `list_emails()` |
+| `folder` | str | IMAP folder name (default: `"INBOX"`) |
+
+**Result dict fields:**
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `uid` | str | Email UID |
+| `subject` | str | Subject line |
+| `from_name` | str | Sender display name |
+| `from_address` | str | Sender email address |
+| `to` | str | Recipient(s) |
+| `date` | str | `YYYY-MM-DD HH:MM` |
+| `date_iso` | str | ISO 8601 timestamp |
+| `body_text` | str | Plain-text body |
+| `body_html` | str | HTML body (if available) |
+| `attachments` | list | `[{filename, size, content_type}, ...]` |
+
+---
+
 ## Error handling pattern
 
 ```python
