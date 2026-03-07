@@ -79,8 +79,9 @@ def handle_menu_choice(choice, cli):
         print("1) Browse events (interactive)")
         print("2) List calendars")
         print("3) List upcoming events")
-        print("4) Back to main menu")
-        calendar_choice = input("\nEnter your choice: ").strip()
+        print("4) Monthly calendar grid")
+        print("5) Back to main menu")
+        calendar_choice = input("\nEnter your choice (1-5): ").strip()
         if calendar_choice == "1":
             cli.calendar.browse_events()
         elif calendar_choice == "2":
@@ -88,6 +89,8 @@ def handle_menu_choice(choice, cli):
         elif calendar_choice == "3":
             cli.calendar.list_events()
         elif calendar_choice == "4":
+            cli.calendar.show_calendar_grid()
+        elif calendar_choice == "5":
             return True
     elif choice == "2":
         print("\n=== iCloud Drive Menu ===")

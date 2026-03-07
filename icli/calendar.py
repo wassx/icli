@@ -1,8 +1,11 @@
 """Calendar module for iCloud CLI - Real iCloud Calendar Integration"""
 
+import logging
 from datetime import datetime, timedelta
 from calendar import monthrange, month_name
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 class CalendarModule:
     def __init__(self, auth=None):
@@ -137,7 +140,6 @@ class CalendarModule:
             
             # Get events for the date range
             if target_calendar:
-                # Filter for specific calendar
                 all_events = calendar_service.get_events(
                     from_dt=today, 
                     to_dt=end_date, 
@@ -145,7 +147,6 @@ class CalendarModule:
                 )
                 events = [e for e in all_events if hasattr(e, 'pguid') and e.pguid == target_calendar.guid]
             else:
-                # Get all events from all calendars
                 events = calendar_service.get_events(
                     from_dt=today, 
                     to_dt=end_date, 
@@ -153,7 +154,10 @@ class CalendarModule:
                 )
             
             if not events:
-                print("No upcoming events found.")
+                print(f"ℹ️  No upcoming events in the next {days_ahead} days.")
+                extend = input("   Show a wider range? Enter number of days (or Enter to skip): ").strip()
+                if extend.isdigit() and int(extend) > 0:
+                    return self.list_events(calendar_index, days_ahead=int(extend))
                 return []
             
             # Sort events by start date
@@ -163,19 +167,17 @@ class CalendarModule:
             print("=" * 80)
             
             event_list = []
-            for i, event in enumerate(events[:10], 1):  # Show first 10 events
+            for i, event in enumerate(events, 1):
                 event_info = self._format_event_for_display(event, i)
                 event_list.append(event_info)
-                
-                # Display event
                 print(f"{i:2d}. {event_info['display']}")
             
             print("=" * 80)
             return event_list
             
         except Exception as e:
-            print(f"❌ Error loading calendar events: {str(e)}")
-            print("   Please check your internet connection and try again.")
+            logger.debug("Error loading calendar events: %s", e, exc_info=True)
+            print("❌ Error loading calendar events. Please check your connection.")
             return None
     
     def _format_event_for_display(self, event, index):
@@ -334,15 +336,23 @@ class CalendarModule:
         print("Commands: [number] to view event, b=back, q=quit, r=refresh")
         print("=" * 60)
         
+        # Cache calendar list for this session; re-fetch only on 'r'
+        cached_calendars = None
+        
         while True:
-            # List calendars first
-            calendars = self.list_calendars()
+            if cached_calendars is None:
+                cached_calendars = self.list_calendars()
+            calendars = cached_calendars
+            
             if not calendars:
                 break
             
-            # Ask user to select a calendar
-            calendar_choice = input("\n📅 Select calendar (1-99, or 'q' to quit): ").strip().lower()
+            # Show actual count in prompt
+            calendar_choice = input(f"\n📅 Select calendar (1-{len(calendars)}, r=refresh, q=quit): ").strip().lower()
             
+            if calendar_choice == 'r':
+                cached_calendars = None  # Force re-fetch on next iteration
+                continue
             if calendar_choice == 'q':
                 print("Exiting calendar browser...")
                 break
@@ -354,7 +364,7 @@ class CalendarModule:
                     events = self.list_events(calendar_index)
                     if events:
                         # Ask user to select an event
-                        event_choice = input("\n📅 Select event (1-99, b=back, q=quit): ").strip().lower()
+                        event_choice = input(f"\n📅 Select event (1-{len(events)}, b=back, q=quit): ").strip().lower()
                         
                         if event_choice == 'q':
                             print("Exiting calendar browser...")
@@ -365,21 +375,18 @@ class CalendarModule:
                             event_index = int(event_choice)
                             if 1 <= event_index <= len(events):
                                 selected_event = events[event_index - 1]
-                                # Debug: Show what we're passing
-                                print(f"🔍 Debug: Selected event type: {type(selected_event)}")
-                                if isinstance(selected_event, dict):
-                                    print(f"   Keys: {list(selected_event.keys())}")
-                                    if 'object' in selected_event:
-                                        print(f"   Object type: {type(selected_event['object'])}")
                                 self.show_event_details(selected_event)
                             else:
                                 print("❌ Invalid event number")
                         else:
                             print("❌ Invalid choice")
+                    else:
+                        print("   No events found. Press Enter to choose a different calendar.")
+                        input()
                 else:
-                    print("No events found for this calendar")
+                    print(f"❌ Please enter a number between 1 and {len(calendars)}")
             else:
-                print("❌ Invalid choice. Use numbers to select a calendar or 'q' to quit.")
+                print("❌ Invalid choice. Use a number, r=refresh, or q=quit.")
     
     def create_event(self, title, date, start_time):
         """Create a new calendar event - DISABLED for read-only mode"""
