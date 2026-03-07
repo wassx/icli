@@ -2,7 +2,7 @@
 
 [![Build & Release](https://github.com/wassx/icli/actions/workflows/release.yml/badge.svg)](https://github.com/wassx/icli/actions/workflows/release.yml)
 [![Tests](https://github.com/wassx/icli/actions/workflows/tests.yml/badge.svg)](https://github.com/wassx/icli/actions/workflows/tests.yml)
-[![Latest Release](https://img.shields.io/github/v/release/wassx/icli)](https://github.com/wassx/icli/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/tag/wassx/icli?sort=semver&label=release)](https://github.com/wassx/icli/releases/latest)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Read-only](https://img.shields.io/badge/iCloud-read--only-orange)](https://github.com/wassx/icli#disclaimer)
