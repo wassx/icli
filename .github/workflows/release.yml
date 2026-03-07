@@ -38,7 +38,12 @@ jobs:
 
       - name: Build binary
         run: |
-          pyinstaller --onefile --name "${{ matrix.artifact }}" --add-data "icli:icli" main.py
+          FIDO2_DIR=$(python -c "import fido2, os; print(os.path.dirname(fido2.__file__))")
+          pyinstaller --onefile --name "${{ matrix.artifact }}" \
+            --add-data "icli:icli" \
+            --add-data "${FIDO2_DIR}/public_suffix_list.dat:fido2" \
+            --collect-data fido2 \
+            main.py
         shell: bash
 
       - name: Upload artifact
