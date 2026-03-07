@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """iCloud CLI - Main entry point"""
 
+import sys
+import os
+import json
+import argparse
 import time
 from icli import iCloudCLI
 from icli.utils import separator, Spinner
@@ -282,5 +286,191 @@ def _handle_drive_search(drive_module):
             else:
                 print("❌ Invalid result number")
 
+# ── Non-interactive CLI (scripting / agent mode) ─────────────────────────────
+
+def _quiet(fn, *args, **kwargs):
+    """Call fn(*args, **kwargs) while suppressing all stdout output."""
+    import io, contextlib
+    with contextlib.redirect_stdout(io.StringIO()):
+        return fn(*args, **kwargs)
+
+
+def _pretty_cli(data, _indent=0):
+    """Recursively print a dict/list in a compact human-readable format."""
+    pad = "  " * _indent
+    if isinstance(data, list):
+        if not data:
+            print(f"{pad}(no results)")
+            return
+        for i, item in enumerate(data, 1):
+            print(f"{pad}[{i}]")
+            _pretty_cli(item, _indent + 1)
+    elif isinstance(data, dict):
+        for k, v in data.items():
+            if isinstance(v, (dict, list)):
+                print(f"{pad}{k}:")
+                _pretty_cli(v, _indent + 1)
+            elif v is not None:
+                print(f"{pad}{k}: {v}")
+    else:
+        if data is not None:
+            print(f"{pad}{data}")
+
+
+def run_cli():
+    """Non-interactive CLI dispatcher for scripting and agent use.
+
+    Invoked automatically when the script is called with arguments::
+
+        python main.py auth status
+        python main.py calendar events --days 7 --json
+        python main.py drive search report --type pdf --json
+
+    Run without arguments to enter the interactive menu.
+    """
+    from icli.api import ICloudAPI
+
+    parser = argparse.ArgumentParser(
+        prog="icli",
+        description=(
+            "iCloud CLI — non-interactive / scripting mode.\n"
+            "Run without arguments for the interactive menu."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Authentication setup (once):\n"
+            "  python main.py auth login          # interactive; saves to keyring\n\n"
+            "Subsequent calls resume the saved session automatically:\n"
+            "  python main.py calendar events --json\n"
+            "  python main.py drive search report --type pdf --json\n"
+        ),
+    )
+    parser.add_argument("--apple-id", metavar="EMAIL",
+                        help="Apple ID (overrides ICLOUD_APPLE_ID env var)")
+    parser.add_argument("--password", metavar="PASSWORD",
+                        help="Password (overrides ICLOUD_PASSWORD env var; prefer keyring)")
+
+    # Shared --json flag inherited by every leaf subparser via parents=
+    _json = argparse.ArgumentParser(add_help=False)
+    _json.add_argument("--json", action="store_true",
+                       help="Output results as JSON (suppresses progress text)")
+
+    sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
+
+    # ── auth ──────────────────────────────────────────────────────────────────
+    auth_p = sub.add_parser("auth", help="Authentication management")
+    auth_sub = auth_p.add_subparsers(dest="auth_cmd", required=True, metavar="SUBCOMMAND")
+    auth_sub.add_parser("status", parents=[_json],
+                        help="Show current authentication status")
+    auth_sub.add_parser("login",  parents=[_json],
+                        help="Login interactively and save credentials to keyring")
+    auth_sub.add_parser("logout", parents=[_json],
+                        help="Logout and remove saved credentials from keyring")
+
+    # ── calendar ──────────────────────────────────────────────────────────────
+    cal_p = sub.add_parser("calendar", help="Calendar commands")
+    cal_sub = cal_p.add_subparsers(dest="cal_cmd", required=True, metavar="SUBCOMMAND")
+    cal_sub.add_parser("list", parents=[_json], help="List all calendars")
+    ev_p = cal_sub.add_parser("events", parents=[_json], help="List upcoming events")
+    ev_p.add_argument("--calendar", metavar="NAME",
+                      help="Filter by calendar name (partial match, case-insensitive)")
+    ev_p.add_argument("--days", type=int, default=14, metavar="N",
+                      help="Look-ahead window in days (default: 14)")
+
+    # ── drive ─────────────────────────────────────────────────────────────────
+    drv_p = sub.add_parser("drive", help="iCloud Drive commands")
+    drv_sub = drv_p.add_subparsers(dest="drv_cmd", required=True, metavar="SUBCOMMAND")
+    ls_p = drv_sub.add_parser("list", parents=[_json],
+                               help="List files and folders at a path")
+    ls_p.add_argument("--path", default="/", metavar="PATH",
+                      help="iCloud Drive directory path (default: /)")
+    sr_p = drv_sub.add_parser("search", parents=[_json],
+                               help="Search files in iCloud Drive")
+    sr_p.add_argument("query", nargs="?", default="",
+                      help="Text to match in filenames (omit to match all)")
+    sr_p.add_argument("--type", dest="file_type", metavar="EXT",
+                      help="Filter by file extension, e.g. pdf or docx")
+    sr_p.add_argument("--min", dest="min_size", type=int, metavar="NKB",
+                      help="Minimum file size in KB")
+    sr_p.add_argument("--max", dest="max_size", type=int, metavar="NKB",
+                      help="Maximum file size in KB")
+
+    args = parser.parse_args()
+    use_json = args.json
+    apple_id = args.apple_id or os.environ.get("ICLOUD_APPLE_ID")
+    password = args.password or os.environ.get("ICLOUD_PASSWORD")
+
+    def out(data):
+        if use_json:
+            print(json.dumps(data, indent=2, default=str))
+        else:
+            _pretty_cli(data)
+
+    def die(msg, code=1):
+        payload = {"ok": False, "error": str(msg)}
+        if use_json:
+            print(json.dumps(payload), file=sys.stderr)
+        else:
+            print(f"\u274c {msg}", file=sys.stderr)
+        sys.exit(code)
+
+    api = ICloudAPI()
+
+    try:
+        # ── auth commands ─────────────────────────────────────────────────────
+        if args.command == "auth":
+            if args.auth_cmd == "status":
+                out(api.auth_status())
+
+            elif args.auth_cmd == "login":
+                # Always interactive so 2FA prompts work correctly.
+                tmp = iCloudCLI()
+                if _quiet(tmp.auth.try_resume_session):
+                    out({"ok": True, "message": f"Session resumed for {tmp.auth.apple_id}"})
+                else:
+                    ok = tmp.auth.login(apple_id=apple_id, password=password)
+                    if ok:
+                        out({"ok": True, "message": f"Logged in as {tmp.auth.apple_id}"})
+                    else:
+                        die("Login failed")
+
+            elif args.auth_cmd == "logout":
+                _quiet(api.auth.try_resume_session)
+                result = _quiet(api.logout)
+                out(result)
+
+        # ── data commands (need authentication) ───────────────────────────────
+        else:
+            try:
+                _quiet(api.authenticate, apple_id=apple_id, password=password)
+            except RuntimeError as exc:
+                die(str(exc))
+
+            if args.command == "calendar":
+                if args.cal_cmd == "list":
+                    out(_quiet(api.list_calendars))
+                elif args.cal_cmd == "events":
+                    out(_quiet(api.list_events,
+                               calendar_name=args.calendar, days=args.days))
+
+            elif args.command == "drive":
+                if args.drv_cmd == "list":
+                    out(_quiet(api.list_files, path=args.path))
+                elif args.drv_cmd == "search":
+                    min_b = args.min_size * 1024 if args.min_size else None
+                    max_b = args.max_size * 1024 if args.max_size else None
+                    out(_quiet(api.search_files,
+                               query=args.query,
+                               file_type=args.file_type,
+                               min_size=min_b,
+                               max_size=max_b))
+
+    except (RuntimeError, ValueError) as exc:
+        die(str(exc))
+
+
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        run_cli()
+    else:
+        main()
