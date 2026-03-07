@@ -508,18 +508,9 @@ class DriveModule:
             # Add additional info if available
             if hasattr(file_info['node'], 'date_created'):
                 print(f"     📅 Created: {file_info['node'].date_created}")
-            
-    def list_files(self, path="/"):
-        """List files in iCloud Drive (legacy method)"""
-        if not self.auth or not self.auth.is_authenticated():
-=======
         except Exception as e:
             print(f"⚠️  Error displaying search result: {str(e)}")
     
-    def list_files(self, path="/"):
-        """List files in iCloud Drive (legacy method)"""
-        if not self.auth or not self.auth.is_authenticated():
-=======
     def list_files(self, path="/"):
         """List files in iCloud Drive (legacy method)"""
         if not self.auth or not self.auth.is_authenticated():
