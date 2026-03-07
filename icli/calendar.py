@@ -218,11 +218,31 @@ class CalendarModule:
     
     def show_event_details(self, event_obj):
         """Show detailed information about a specific event"""
-        if not event_obj or not hasattr(event_obj, 'object'):
-            print("❌ Invalid event object")
+        # Enhanced event object validation
+        if not event_obj:
+            print("❌ Invalid event object: None")
             return
         
-        event = event_obj['object']
+        # Handle different event object formats
+        if isinstance(event_obj, dict) and 'object' in event_obj:
+            event = event_obj['object']
+        elif hasattr(event_obj, 'start_date'):  # Direct EventObject
+            event = event_obj
+        else:
+            print(f"❌ Invalid event object format: {type(event_obj)}")
+            print(f"   Content: {event_obj}")
+            return
+        
+        # Validate the event object
+        if not event:
+            print("❌ Event object is None")
+            return
+        
+        # Check if it has basic event properties
+        if not hasattr(event, 'title') and not hasattr(event, 'start_date'):
+            print("❌ Object doesn't appear to be a valid event")
+            print(f"   Available attributes: {dir(event)}")
+            return
         
         print("\n📅 Event Details")
         print("=" * 60)
@@ -342,7 +362,14 @@ class CalendarModule:
                         elif event_choice.isdigit():
                             event_index = int(event_choice)
                             if 1 <= event_index <= len(events):
-                                self.show_event_details(events[event_index - 1])
+                                selected_event = events[event_index - 1]
+                                # Debug: Show what we're passing
+                                print(f"🔍 Debug: Selected event type: {type(selected_event)}")
+                                if isinstance(selected_event, dict):
+                                    print(f"   Keys: {list(selected_event.keys())}")
+                                    if 'object' in selected_event:
+                                        print(f"   Object type: {type(selected_event['object'])}")
+                                self.show_event_details(selected_event)
                             else:
                                 print("❌ Invalid event number")
                         else:
