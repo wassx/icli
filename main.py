@@ -5,6 +5,13 @@ import time
 from icli import iCloudCLI
 from icli.utils import separator, Spinner
 
+BANNER = r"""
+ _        ___  _     ___ 
+(_)      / __|| |   |_ _|
+| |     | (__ | |    | | 
+|_|      \___||_|   |___| 
+"""
+
 def pause():
     """Wait for the user to press Enter before redrawing the menu."""
     input("\nPress Enter to continue...")
@@ -148,7 +155,7 @@ def main():
     cli = iCloudCLI()
     
     # Welcome message
-    print("Welcome to iCloud CLI")
+    print(BANNER)
     print(separator())
     print("A command-line interface for your iCloud services")
     
