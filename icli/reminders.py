@@ -136,20 +136,68 @@ class RemindersModule:
     def list_reminder_lists(self):
         """Return all Reminders lists as a list of dicts.
 
-        Each dict: name (str), uid (str), count (int)
+        Each dict: name (str), uid (str)
+
+        Uses a direct PROPFIND query so that subscribed or otherwise
+        non-standard collection types are not silently skipped.
         """
         principal = self._connect()
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            cals = principal.calendars()
+        home_url = str(principal.calendar_home_set.url)
+
+        # Direct PROPFIND so we discover *all* VTODO collections, including
+        # types that caldav's calendars() helper filters out (e.g. subscribed)
+        import requests as _req
+        body = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<A:propfind xmlns:A="DAV:" xmlns:B="urn:ietf:params:xml:ns:caldav">'
+            '<A:prop><A:displayname/><A:resourcetype/>'
+            '<B:supported-calendar-component-set/></A:prop>'
+            '</A:propfind>'
+        )
+        resp = _req.request(
+            "PROPFIND", home_url,
+            auth=(self.auth.apple_id, self._get_password()),
+            headers={"Depth": "1", "Content-Type": "application/xml; charset=utf-8"},
+            data=body.encode(),
+            timeout=20,
+        )
+        resp.raise_for_status()
+
+        import xml.etree.ElementTree as _ET
+        import caldav as _caldav
+
+        root = _ET.fromstring(resp.text)
+        NS = {"d": "DAV:", "c": "urn:ietf:params:xml:ns:caldav"}
 
         result = []
-        for cal in cals:
-            comps = cal.get_supported_components() or []
+        for r in root.findall(".//d:response", NS):
+            comps_el = r.findall(".//{urn:ietf:params:xml:ns:caldav}comp")
+            comps = [c.get("name") for c in comps_el if c.get("name")]
             if "VTODO" not in comps:
                 continue
-            name = cal.get_display_name() or "Unnamed"
-            result.append({"name": name, "uid": str(cal.url), "_cal": cal})
+
+            href = r.findtext("d:href", namespaces=NS) or ""
+            # Skip special-purpose collections (home set itself, outbox, inbox)
+            tail = href.rstrip("/").split("/")[-1].lower()
+            if tail in ("outbox", "inbox", "notification", "calendars", ""):
+                continue
+            if href == home_url.rstrip("/") or href == home_url:
+                continue
+
+            raw_name = r.findtext(".//d:displayname", namespaces=NS) or "Unnamed"
+            clean = _clean_list_name(raw_name)
+
+            # Build absolute URL for the caldav Calendar object
+            from urllib.parse import urljoin
+            full_url = urljoin(home_url, href)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                cal_obj = _caldav.Calendar(
+                    client=self._client, url=full_url
+                )
+            result.append({"name": clean, "raw_name": raw_name,
+                           "uid": href, "_cal": cal_obj})
+
         return result
 
     def list_reminders(self, list_name=None, include_completed=False):
@@ -362,6 +410,25 @@ class RemindersModule:
 
 class _CalDAVAuthError(RuntimeError):
     pass
+
+
+# Characters that iCloud CalDAV appends to shared/family list names but which
+# the Reminders app itself does not display.
+_ICLOUD_NAME_NOISE = " ⚠️\u26A0\uFE0F"
+
+
+def _clean_list_name(name: str) -> str:
+    """Strip iCloud-appended warning characters from a CalDAV calendar name.
+
+    iCloud's CalDAV layer appends U+26A0 ⚠ (with optional U+FE0F variation
+    selector) to the names of shared / family-shared lists.  The Reminders
+    app itself does not show this suffix, so we strip it for cleaner output.
+    """
+    cleaned = name
+    for ch in (" ⚠️", " ⚠", "⚠️", "⚠"):
+        if cleaned.endswith(ch):
+            cleaned = cleaned[: -len(ch)]
+    return cleaned.strip() or name
 
 
 def _parse_vtodo(ical_data, list_name):

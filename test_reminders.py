@@ -4,6 +4,25 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 
+class TestCleanListName(unittest.TestCase):
+    def test_strips_warning_emoji(self):
+        from icli.reminders import _clean_list_name
+        self.assertEqual(_clean_list_name("Familie ⚠️"), "Familie")
+
+    def test_strips_plain_warning(self):
+        from icli.reminders import _clean_list_name
+        self.assertEqual(_clean_list_name("Erinnerungen ⚠"), "Erinnerungen")
+
+    def test_leaves_normal_name_unchanged(self):
+        from icli.reminders import _clean_list_name
+        self.assertEqual(_clean_list_name("Shopping"), "Shopping")
+
+    def test_leaves_internal_warning_unchanged(self):
+        from icli.reminders import _clean_list_name
+        # Only trailing ⚠ is stripped, not one in the middle
+        self.assertEqual(_clean_list_name("⚠ important"), "⚠ important")
+
+
 class TestRemindersModuleImport(unittest.TestCase):
     def test_module_importable(self):
         from icli import reminders  # noqa: F401
