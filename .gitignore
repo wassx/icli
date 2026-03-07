@@ -14,6 +14,7 @@ venv/
 env/
 icli_env/
 .venv/
+myenv/
 
 # Pytest
 .pytest_cache/
