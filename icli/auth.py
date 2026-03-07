@@ -41,24 +41,16 @@ class iCloudAuth:
         self.refresh_token = None
         self.session_expiry = None
         self.last_activity = None
-        self._check_dependencies()
         logger.info("iCloudAuth initialized")
     
-    def _check_dependencies(self):
-        """Check and warn about missing dependencies"""
-        missing_deps = []
-        
+    def check_dependencies(self):
+        """Return a list of missing dependency names, or an empty list if all present."""
+        missing = []
         if not PYICLOUD_AVAILABLE:
-            missing_deps.append("pyicloud")
-        
+            missing.append("pyicloud")
         if not KEYRING_AVAILABLE:
-            missing_deps.append("keyring")
-        
-        if missing_deps:
-            print(f"⚠️  Missing dependencies for real iCloud data: {', '.join(missing_deps)}")
-            print(f"   Install with: pip install {' '.join(missing_deps)}")
-            print(f"   Continuing in demo mode with mock data.")
-            print()
+            missing.append("keyring")
+        return missing
     
     def login(self, apple_id=None, password=None, use_keyring=True):
         """Authenticate with iCloud with improved UX"""

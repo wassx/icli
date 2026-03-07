@@ -144,20 +144,18 @@ def main():
     print("=" * 40)
     print("A command-line interface for your iCloud services")
     
-    # Check if we can use real data
-    has_pyicloud = True
-    try:
-        from pyicloud import PyiCloudService
-    except ImportError:
-        has_pyicloud = False
-    
-    if has_pyicloud:
-        print("Current mode: Ready for real iCloud data")
-        print("Note: Login to access your actual iCloud account")
+    # Dependency check (outside the constructor so no side-effects in __init__)
+    missing = cli.auth.check_dependencies()
+    if missing:
+        print(f"\n⚠️  Missing dependencies: {', '.join(missing)}")
+        print(f"   Install with: pip install {' '.join(missing)}")
+        print("   All features require these packages.\n")
     else:
-        print("❌ Dependencies required for real iCloud access")
-        print("   Install: pip install pyicloud keyring")
-        print("   All features require authentication")
+        # Try to resume a previous session from saved keyring credentials
+        if cli.auth.try_resume_session():
+            print(f"✅ Session resumed for {cli.auth.apple_id}")
+        else:
+            print("ℹ️  Ready — log in via Authentication (option 3) to access your iCloud data.")
     
     running = True
     
