@@ -1,4 +1,4 @@
-# iCLI — iCloud Command-Line Interface
+# iCLI
 
 ```
  _  ___ _    ___ 
@@ -7,56 +7,54 @@
 |_|\___|____|___|
 ```
 
-A terminal interface and scripting API for **iCloud Calendar** and **iCloud Drive**.
-Works in two modes: an interactive menu for humans and a non-interactive CLI + Python API for scripts and agents.
+Command-line interface and Python API for **iCloud Calendar** and **iCloud Drive**.
 
-> ⚠️ **Read-only.** iCLI never writes to or deletes any iCloud data.  
-> See [DISCLAIMER.md](DISCLAIMER.md) for full terms.
+> Read-only. iCLI never modifies or deletes any iCloud data.
 
 ---
 
-## Features
-
-| Area | What you can do |
-|------|----------------|
-| **Calendar** | List calendars, browse events, monthly grid view |
-| **iCloud Drive** | Browse the file tree, list a path, search by name / type / size |
-| **Authentication** | Secure keyring storage, 2FA, auto-resume saved sessions |
-| **Scripting** | Full argparse CLI with `--json` output; importable `ICloudAPI` class |
-
----
-
-## Requirements
-
-- Python 3.8+
-- `pyicloud` — iCloud API client
-- `keyring` — secure credential storage
-- `requests` — HTTP
+## Install
 
 ```bash
-pip install pyicloud keyring requests
-```
-
-Or with the virtual environment from the repo:
-
-```bash
+git clone <repo>
+cd icli
 python -m venv myenv && source myenv/bin/activate
 pip install -r requirements.txt
 ```
 
 ---
 
-## Quick Start
+## First login
 
-### 1 — First-time login (interactive, stores credentials in system keyring)
+Run once interactively to save credentials to the system keyring.  
+Apple requires an **app-specific password** — generate one at  
+[appleid.apple.com → Sign-In & Security → App-Specific Passwords](https://appleid.apple.com).
 
 ```bash
 python main.py auth login
 ```
 
-Enter your Apple ID e-mail and password when prompted. If two-factor authentication is required, a 6-digit code will be sent to your trusted devices.
+```
+📧 Apple ID:
+   Enter your Apple ID email: you@icloud.com
 
-### 2 — Interactive menu
+Password:
+   Enter your password:
+
+🔄 Connecting to iCloud...
+🔐 Two-Factor Authentication Required
+   Enter 6-digit verification code: 123456
+   ✅ Two-factor authentication successful
+
+Authentication Successful!
+   Session will expire in 24 hours
+```
+
+Every subsequent call resumes the saved session silently — no prompts.
+
+---
+
+## Interactive menu
 
 ```bash
 python main.py
@@ -67,7 +65,7 @@ python main.py
 (_)/ __| |  |_ _|
 | | (__| |__ | | 
 |_|\___|____|___|
-════════════════════════════════════════
+════════════════════════════════════════════════
 ✅ Session resumed for you@icloud.com
 
 === iCloud CLI - 🔒 Logged in ===
@@ -75,116 +73,228 @@ python main.py
 2) iCloud Drive
 3) Authentication
 4) Exit
+
+Enter your choice (1-4):
 ```
 
-### 3 — Non-interactive / scripting mode
+---
+
+## Non-interactive CLI
+
+All commands work without the interactive menu.  
+Append `--json` to get machine-readable output.
+
+### Auth
 
 ```bash
-# Authentication status
+# Check session state
+python main.py auth status
+
+# authenticated: False
+
 python main.py auth status --json
+# {
+#   "authenticated": true,
+#   "apple_id": "you@icloud.com",
+#   "access": "read-only",
+#   "session_expires_in_seconds": 82340
+# }
 
-# List calendars as JSON
+# Save credentials interactively
+python main.py auth login
+
+# Remove session and keyring entry
+python main.py auth logout --json
+# {"ok": true, "message": "Logged out"}
+```
+
+### Calendar
+
+```bash
+# List all calendars
 python main.py calendar list --json
+# [
+#   {"id": 1, "name": "Work",     "color": "#0E60CF", "default": false},
+#   {"id": 2, "name": "Personal", "color": "#1CB84A", "default": true}
+# ]
 
-# Upcoming events for the next 7 days
-python main.py calendar events --days 7 --json
+# Upcoming events — next 14 days (default)
+python main.py calendar events --json
 
-# List iCloud Drive root
+# Events in a specific calendar, narrower window
+python main.py calendar events --calendar Work --days 7 --json
+# [
+#   {
+#     "title": "Standup",
+#     "start": "2026-03-09T09:00:00",
+#     "end":   "2026-03-09T09:30:00",
+#     "all_day": false,
+#     "recurring": true,
+#     "location": null,
+#     "calendar": "Work"
+#   }
+# ]
+```
+
+### iCloud Drive
+
+```bash
+# List root directory
 python main.py drive list --json
+# [
+#   {"name": "Documents", "type": "folder", "path": "/Documents", "size_bytes": 0,       "size": "0 B"   },
+#   {"name": "photo.jpg", "type": "file",   "path": "/photo.jpg", "size_bytes": 3145728, "size": "3.0 MB"}
+# ]
 
-# Search for PDF files larger than 500 KB
+# List a subdirectory
+python main.py drive list --path /Documents --json
+
+# Search by filename
+python main.py drive search report --json
+
+# Search with filters
 python main.py drive search --type pdf --min 500 --json
+# [
+#   {
+#     "name": "Q1 report.pdf",
+#     "path": "/Documents/Q1 report.pdf",
+#     "size_bytes": 614400,
+#     "size": "600.0 KB",
+#     "type": "file",
+#     "extension": "pdf",
+#     "formatted_size": "600.0 KB"
+#   }
+# ]
+
+# Files between 1 MB and 10 MB
+python main.py drive search --min 1024 --max 10240 --json
 ```
 
 ---
 
-## CLI Reference
+## Python API
 
-Full command reference: **[docs/cli-reference.md](docs/cli-reference.md)**
-
-```
-python main.py [--apple-id EMAIL] [--password PASSWORD] COMMAND SUBCOMMAND [options] [--json]
-
-Commands:
-  auth      status | login | logout
-  calendar  list | events [--calendar NAME] [--days N]
-  drive     list [--path PATH] | search [query] [--type EXT] [--min NKB] [--max NKB]
-```
-
----
-
-## Python Scripting API
-
-For agents and automation scripts that need to call iCLI programmatically:
+For scripts and AI agents that need to call iCLI programmatically.
 
 ```python
 from icli.api import ICloudAPI
 
 api = ICloudAPI()
-api.authenticate()                              # silent keyring resume
+api.authenticate()          # resumes keyring session silently
 
+# Calendar
 calendars = api.list_calendars()
-events    = api.list_events(calendar_name="Work", days=7)
-files     = api.list_files(path="/Documents")
-results   = api.search_files(query="report", file_type="pdf")
+# [{"id": 1, "name": "Work", "color": "#0E60CF", "default": False}, ...]
+
+events = api.list_events(calendar_name="Work", days=7)
+# [{"title": "Standup", "start": "2026-03-09T09:00:00", ...}, ...]
+
+# Drive
+files = api.list_files(path="/Documents")
+# [{"name": "report.pdf", "type": "file", "size": "600.0 KB", ...}, ...]
+
+results = api.search_files(query="report", file_type="pdf", min_size=500*1024)
+# [{"name": "Q1 report.pdf", "path": "/Documents/Q1 report.pdf", ...}, ...]
 ```
 
-All methods return plain `dict`/`list` objects safe to pass to `json.dumps()`.  
-They raise `RuntimeError` or `ValueError` on error and never call `input()` or print to stdout.
+All methods return plain `dict`/`list` objects safe for `json.dumps()`.  
+They raise `RuntimeError` (auth / service failure) or `ValueError` (bad argument)  
+and never call `input()` or print to stdout.
 
-Full reference: **[docs/scripting-api.md](docs/scripting-api.md)**
+### Credential injection (CI / agents)
 
----
+```python
+import os
+os.environ["ICLOUD_APPLE_ID"] = "you@icloud.com"
+os.environ["ICLOUD_PASSWORD"] = "xxxx-xxxx-xxxx-xxxx"
 
-## Authentication
-
-iCLI stores credentials in the **system keyring** (macOS Keychain, GNOME Keyring, Windows Credential Manager).
-
-```bash
-python main.py auth login      # interactive; saves to keyring
-python main.py auth status     # show session state
-python main.py auth logout     # clear session and keyring entry
+api = ICloudAPI()
+api.authenticate()
 ```
 
-For CI/automation, supply credentials via environment variables:
+Or from the shell:
 
 ```bash
-export ICLOUD_APPLE_ID="you@icloud.com"
-export ICLOUD_PASSWORD="your-app-specific-password"
+ICLOUD_APPLE_ID=you@icloud.com \
+ICLOUD_PASSWORD=xxxx-xxxx-xxxx-xxxx \
 python main.py calendar events --json
 ```
 
-Full guide: **[docs/authentication.md](docs/authentication.md)**
+---
+
+## Pipe-friendly output
+
+```bash
+# Print today's event titles with jq
+python main.py calendar events --days 1 --json | jq '.[].title'
+
+# Count files in a directory
+python main.py drive list --path /Documents --json | jq length
+
+# Find large PDFs and extract paths
+python main.py drive search --type pdf --min 10240 --json \
+  | jq -r '.[].path'
+```
 
 ---
 
-## Project Layout
+## Command reference
+
+```
+python main.py [--apple-id EMAIL] [--password PASSWORD] COMMAND SUBCOMMAND [--json]
+
+auth
+  status              Current session state
+  login               Interactive login; saves to keyring
+  logout              Clear session and keyring
+
+calendar
+  list                List all calendars
+  events              Upcoming events
+    --calendar NAME   Filter by calendar (partial match)
+    --days N          Look-ahead window (default: 14)
+
+drive
+  list                Directory listing
+    --path PATH       Target path (default: /)
+  search              Recursive file search
+    [query]           Filename text filter
+    --type EXT        Extension filter (pdf, docx, …)
+    --min NKB         Minimum size in KB
+    --max NKB         Maximum size in KB
+```
+
+Full reference: [docs/cli-reference.md](docs/cli-reference.md)  
+Python API: [docs/scripting-api.md](docs/scripting-api.md)  
+Authentication: [docs/authentication.md](docs/authentication.md)
+
+---
+
+## Project layout
 
 ```
 icli/
-  __init__.py      iCloudCLI entry-point class
-  api.py           Non-interactive ICloudAPI (scripting)
-  auth.py          Session management, 2FA, keyring
-  calendar.py      Calendar module
-  drive.py         Drive module
-  utils.py         Shared UI helpers (Spinner, separator)
-main.py            Interactive menu + argparse CLI dispatcher
-tests/             Unit and integration tests
-examples/          demo.py, quickstart.py
-docs/              CLI reference, API reference, auth guide
+  api.py        ICloudAPI — scripting/agent interface
+  auth.py       Session management, 2FA, keyring
+  calendar.py   Calendar module
+  drive.py      Drive module
+  utils.py      Spinner, separator
+main.py         Interactive menu + argparse dispatcher
+docs/           CLI reference, API docs, auth guide
+tests/          Test suite
+examples/       demo.py, quickstart.py
 ```
 
 ---
 
 ## Limitations
 
-- **Read-only** — no writes, uploads, or deletions
-- **Unofficial API** — Apple's iCloud API is undocumented; it may change
-- **2FA** — first login requires an interactive terminal; subsequent runs resume silently
+- **Read-only** — no uploads, edits, or deletions
+- **Unofficial API** — Apple's iCloud endpoints are undocumented and may change
+- **2FA** — first login requires an interactive terminal; subsequent runs are silent
 
 ---
 
-## License
+## Disclaimer
 
-MIT — see [LICENSE](LICENSE) file.  
-Third-party libraries (`pyicloud`, `keyring`, `requests`) carry their own licences.
+See [DISCLAIMER.md](DISCLAIMER.md). Use at your own risk.
