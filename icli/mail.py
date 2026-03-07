@@ -472,9 +472,9 @@ class MailModule:
             with Spinner("Loading email"):
                 full = self.get_email(uid, folder=folder)
 
-            print(f"\n{'=' * 60}")
+            print(f"\n{separator('=')}")
             print(f"From:    {full['from_name']} <{full['from_address']}>")
-            print(f"To:      {full['to']}")
+            print(f"To:      {self._decode_header(full['to'])}")
             print(f"Date:    {full['date']}")
             print(f"Subject: {full['subject']}")
             if full["attachments"]:
@@ -485,7 +485,11 @@ class MailModule:
                 print(f"Attach:  {att_list}")
             print(separator("-"))
 
-            body = full["body_text"] or "(no text content)"
+            body = full["body_text"]
+            if not body and full["body_html"]:
+                body = self._strip_html(full["body_html"])
+            if not body:
+                body = "(no text content)"
             print(body.strip())
             print(separator("-"))
 
@@ -517,3 +521,18 @@ class MailModule:
                 return f"{size_bytes:.1f} {unit}"
             size_bytes /= 1024
         return f"{size_bytes:.1f} TB"
+
+    @staticmethod
+    def _strip_html(html):
+        """Convert HTML to readable plain text (best-effort)."""
+        import html as html_mod
+
+        text = re.sub(r"<style[^>]*>.*?</style>", "", html, flags=re.S | re.I)
+        text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.S | re.I)
+        text = re.sub(r"<br\s*/?>", "\n", text, flags=re.I)
+        text = re.sub(r"</(p|div|tr|li|h[1-6])>", "\n", text, flags=re.I)
+        text = re.sub(r"<[^>]+>", "", text)
+        text = html_mod.unescape(text)
+        # Collapse runs of blank lines
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        return text.strip()
