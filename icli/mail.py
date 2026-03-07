@@ -12,6 +12,11 @@ from icli.utils import separator, Spinner
 logger = logging.getLogger(__name__)
 
 
+class IMAPAuthError(RuntimeError):
+    """Raised when IMAP login fails due to bad credentials."""
+    pass
+
+
 class MailModule:
     """Read-only access to iCloud Mail via IMAP.
 
@@ -59,9 +64,12 @@ class MailModule:
             )
 
         conn = imaplib.IMAP4_SSL(self.IMAP_HOST, self.IMAP_PORT)
-        status, _ = conn.login(apple_id, password)
+        try:
+            status, _ = conn.login(apple_id, password)
+        except imaplib.IMAP4.error as e:
+            raise IMAPAuthError(f"IMAP authentication failed: {e}") from e
         if status != "OK":
-            raise RuntimeError("IMAP login failed")
+            raise IMAPAuthError("IMAP login failed")
         self._conn = conn
         return conn
 
@@ -314,18 +322,20 @@ class MailModule:
         self.auth.check_session_activity()
 
         print("\n=== iCloud Mail ===")
-
-        # Ensure a mail password is available (prompt on first use)
-        if not self._get_password():
-            pw = self._prompt_and_save_password()
-            if not pw:
-                return
-
         print("📧 Loading your inbox...")
 
         try:
-            with Spinner("Connecting to iCloud Mail"):
-                emails = self.list_emails(folder="INBOX", limit=20)
+            try:
+                with Spinner("Connecting to iCloud Mail"):
+                    emails = self.list_emails(folder="INBOX", limit=20)
+            except IMAPAuthError:
+                # Stored password didn't work — prompt for a new one
+                pw = self._prompt_and_save_password()
+                if not pw:
+                    return
+                self._conn = None
+                with Spinner("Connecting to iCloud Mail"):
+                    emails = self.list_emails(folder="INBOX", limit=20)
 
             if not emails:
                 print("📭 Your inbox is empty.")
@@ -370,15 +380,17 @@ class MailModule:
 
         self.auth.check_session_activity()
 
-        # Ensure a mail password is available (prompt on first use)
-        if not self._get_password():
-            pw = self._prompt_and_save_password()
-            if not pw:
-                return
-
         try:
-            with Spinner("Loading mail folders"):
-                folders = self.list_folders()
+            try:
+                with Spinner("Loading mail folders"):
+                    folders = self.list_folders()
+            except IMAPAuthError:
+                pw = self._prompt_and_save_password()
+                if not pw:
+                    return
+                self._conn = None
+                with Spinner("Loading mail folders"):
+                    folders = self.list_folders()
 
             if not folders:
                 print("❌ No folders found.")
