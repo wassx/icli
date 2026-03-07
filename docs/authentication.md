@@ -83,6 +83,18 @@ ICLOUD_APPLE_ID=you@icloud.com ICLOUD_PASSWORD=xxxx-xxxx-xxxx-xxxx \
 
 > **Security note:** Environment variables are visible to other processes on the same machine. Prefer the keyring for interactive use;  use environment variables only in isolated CI environments.
 
+### Mail-specific password
+
+iCloud Mail uses IMAP and may require its own app-specific password (separate from the one used for iCloud web services).  The first time you open **iCloud Mail** interactively you'll be prompted to enter and verify one.  It's saved under the `iCloudCLI-Mail` keyring service.
+
+For automation, set `ICLOUD_MAIL_PASSWORD`:
+
+```bash
+export ICLOUD_MAIL_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+```
+
+If `ICLOUD_MAIL_PASSWORD` is not set, the module falls back to `ICLOUD_PASSWORD` and then the main keyring entry.
+
 ---
 
 ## Check authentication status

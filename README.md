@@ -100,6 +100,18 @@ Authentication Successful!
 
 Every subsequent call resumes the saved session silently — no prompts.
 
+### Mail password
+
+iCloud Mail uses IMAP and may need its own app-specific password.
+The first time you open **iCloud Mail** in interactive mode, you'll be prompted to enter one.
+It's verified on the spot and saved to the system keyring.
+
+You can also set it via environment variable:
+
+```bash
+export ICLOUD_MAIL_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+```
+
 ---
 
 ## Quick examples

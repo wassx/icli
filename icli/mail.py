@@ -15,13 +15,18 @@ logger = logging.getLogger(__name__)
 class MailModule:
     """Read-only access to iCloud Mail via IMAP.
 
-    Uses ``imap.mail.me.com:993`` with the same app-specific password
-    that pyicloud needs.  Credentials are pulled from the ``iCloudAuth``
-    instance (keyring / env vars).
+    Uses ``imap.mail.me.com:993`` with an app-specific password.
+    The password is looked up from (in order):
+      1. ``ICLOUD_MAIL_PASSWORD`` env var
+      2. ``ICLOUD_PASSWORD`` env var
+      3. Keyring service ``iCloudCLI-Mail``
+      4. Keyring service ``iCloudCLI`` (shared with pyicloud auth)
+    If none is found, interactive mode prompts the user to enter one.
     """
 
     IMAP_HOST = "imap.mail.me.com"
     IMAP_PORT = 993
+    KEYRING_SERVICE = "iCloudCLI-Mail"
 
     def __init__(self, auth=None):
         self.auth = auth
@@ -44,10 +49,13 @@ class MailModule:
         apple_id = self.auth.apple_id
         password = self._get_password()
 
-        if not apple_id or not password:
+        if not password:
             raise RuntimeError(
-                "Apple ID or password not available.  "
-                "Run 'icli auth login' to store credentials."
+                "No mail password found.  iCloud Mail requires a dedicated "
+                "app-specific password for IMAP access.\n"
+                "   1. Go to https://appleid.apple.com → Sign-In & Security → App-Specific Passwords\n"
+                "   2. Generate a new password labelled 'iCLI Mail'\n"
+                "   3. Run 'icli' → iCloud Mail to enter it, or set ICLOUD_MAIL_PASSWORD env var"
             )
 
         conn = imaplib.IMAP4_SSL(self.IMAP_HOST, self.IMAP_PORT)
@@ -58,19 +66,79 @@ class MailModule:
         return conn
 
     def _get_password(self):
-        """Retrieve the stored password from keyring or environment."""
+        """Retrieve the mail-specific password from keyring or environment."""
         import os
 
+        # Mail-specific env var first
+        pw = os.environ.get("ICLOUD_MAIL_PASSWORD")
+        if pw:
+            return pw
+
+        # Fall back to general password env var
         pw = os.environ.get("ICLOUD_PASSWORD")
         if pw:
             return pw
 
+        # Try mail-specific keyring entry
+        try:
+            import keyring
+            pw = keyring.get_password(self.KEYRING_SERVICE, self.auth.apple_id)
+            if pw:
+                return pw
+        except Exception:
+            pass
+
+        # Fall back to general keyring entry (may work if same app-specific pw)
         try:
             import keyring
             pw = keyring.get_password("iCloudCLI", self.auth.apple_id)
         except Exception:
             pw = None
         return pw
+
+    def _save_password(self, password):
+        """Save the mail password to keyring."""
+        try:
+            import keyring
+            keyring.set_password(self.KEYRING_SERVICE, self.auth.apple_id, password)
+            return True
+        except Exception:
+            return False
+
+    def _prompt_and_save_password(self):
+        """Interactively prompt for the mail app-specific password."""
+        import getpass
+
+        print("\n🔑 iCloud Mail requires a dedicated app-specific password.")
+        print("   This may be the same one you used for login, or a new one.")
+        print("   Generate one at: https://appleid.apple.com")
+        print("   → Sign-In & Security → App-Specific Passwords")
+        print()
+
+        pw = getpass.getpass("   Enter app-specific password for Mail: ").strip()
+        if not pw:
+            return None
+
+        # Test the password before saving
+        try:
+            conn = imaplib.IMAP4_SSL(self.IMAP_HOST, self.IMAP_PORT)
+            status, _ = conn.login(self.auth.apple_id, pw)
+            conn.logout()
+            if status == "OK":
+                if self._save_password(pw):
+                    print("   ✅ Password verified and saved to keyring.")
+                else:
+                    print("   ✅ Password verified (could not save to keyring — will ask again next time).")
+                return pw
+            else:
+                print("   ❌ Authentication failed. Check the password.")
+                return None
+        except imaplib.IMAP4.error as e:
+            print(f"   ❌ Authentication failed: {e}")
+            return None
+        except Exception as e:
+            print(f"   ❌ Connection error: {e}")
+            return None
 
     def disconnect(self):
         """Close the IMAP connection."""
@@ -246,6 +314,13 @@ class MailModule:
         self.auth.check_session_activity()
 
         print("\n=== iCloud Mail ===")
+
+        # Ensure a mail password is available (prompt on first use)
+        if not self._get_password():
+            pw = self._prompt_and_save_password()
+            if not pw:
+                return
+
         print("📧 Loading your inbox...")
 
         try:
@@ -283,7 +358,7 @@ class MailModule:
             print(f"❌ {e}")
         except Exception as e:
             logger.debug("Mail error: %s", e, exc_info=True)
-            print("❌ Could not connect to iCloud Mail. Check your credentials.")
+            print(f"❌ Could not connect to iCloud Mail: {e}")
         finally:
             self.disconnect()
 
@@ -294,6 +369,12 @@ class MailModule:
             return
 
         self.auth.check_session_activity()
+
+        # Ensure a mail password is available (prompt on first use)
+        if not self._get_password():
+            pw = self._prompt_and_save_password()
+            if not pw:
+                return
 
         try:
             with Spinner("Loading mail folders"):
@@ -351,7 +432,7 @@ class MailModule:
             print(f"❌ {e}")
         except Exception as e:
             logger.debug("Mail error: %s", e, exc_info=True)
-            print("❌ Could not connect to iCloud Mail.")
+            print(f"❌ Could not connect to iCloud Mail: {e}")
         finally:
             self.disconnect()
 
