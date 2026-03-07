@@ -61,12 +61,26 @@ python demo.py
 
 ## 📋 Features
 
-### Calendar Module 🚧 (Real Data Ready)
-- **List upcoming events**: From actual iCloud calendar (with authentication)
-- **Mock data fallback**: Sample events when not authenticated
-- Create new events (planned)
-- Edit/delete existing events (planned)
-- Calendar selection support (planned)
+### Calendar Module ✅ (Full Read-Only Functionality)
+- **Interactive calendar browser**: Navigate calendars and events with full details
+- **List all calendars**: View all available iCloud calendars with metadata
+- **List upcoming events**: Show events from next 30 days (configurable)
+- **Event detail view**: Comprehensive information including dates, times, locations, recurrence, attendees
+- **Calendar selection**: Choose specific calendar or view all calendars combined
+- **Date range filtering**: Automatic filtering for upcoming events
+- **Recurring event support**: Proper handling of recurring events
+- **Timezone-aware**: Correct datetime handling across timezones
+- **Read-only enforcement**: All write operations disabled for security
+
+**Features:**
+```
+📅 Calendar Browser Interface
+├─ Select from multiple calendars
+├─ View upcoming events (next 30 days)
+├─ Navigate event details
+├─ Filter by calendar
+└─ Read-only access only
+```
 
 ### iCloud Drive Module ✅ (Interactive File Browser)
 - **Interactive file tree browser**: Navigate directories with numbered selection
@@ -182,16 +196,82 @@ The CLI now supports real iCloud data access through Apple ID authentication wit
 4) Exit
 ```
 
+### Calendar Menu
+```
+=== Calendar Menu ===
+1) Browse events (interactive)
+2) List calendars
+3) List upcoming events
+4) Back to main menu
+```
+
+### Calendar Browser
+```
+=== iCloud Calendar Browser ===
+📅 Viewing your iCloud calendar events
+Commands: [number] to view event, b=back, q=quit, r=refresh
+
+📅 Found 3 calendars:
+============================================================
+ 1. 📅 Work
+ 2. 📆 Personal
+ 3. 📆 Family
+
+📅 Select calendar (1-99, or 'q' to quit):
+```
+
+### Event List
+```
+📅 Found 5 upcoming events (next 30 days):
+============================================================
+ 1. Team Meeting @ Conference Room
+    📅 Mon, Jan 15, 2024 • 10:00 AM - 11:00 AM
+ 2. Doctor Appointment
+    📅 Tue, Jan 16, 2024 • 02:30 PM - 03:00 PM
+ 3. Project Deadline
+    📅 Fri, Jan 19, 2024 • All Day • 🔄 Recurring
+
+📅 Select event (1-99, b=back, q=quit):
+```
+
+### Event Details
+```
+📅 Event Details
+============================================================
+Title: Team Meeting
+
+📅 When:
+  Starts: Monday, January 15, 2024 at 10:00 AM
+  Ends:   Monday, January 15, 2024 at 11:00 AM
+  Duration: 1 hours, 0 minutes
+
+📍 Location: Conference Room A
+
+📝 Notes:
+  Quarterly planning meeting with entire team
+
+👥 Attendees (5):
+  1. john@example.com
+  2. sarah@example.com
+  3. mike@example.com
+  4. emma@example.com
+  5. david@example.com
+
+📆 Calendar: Work
+============================================================
+```
+
 ### iCloud Drive Browser
 ```
 === iCloud Drive Browser ===
 📁 Navigating your iCloud Drive files
-Commands: [number] to enter, b=back, q=quit, r=refresh
+Commands: [number] to enter, 0 for parent (..), b=back, q=quit, r=refresh
 
-📁 iCloud Drive / Documents / Work
+📁 iCloud Drive / Documents / Work / Projects
 
 📁 Contents (8 items):
 ------------------------------------------------------------
+ 0. 📁 .. (Parent Directory)
  1. 📁 Projects/ 1.2 MB
  2. 📁 Archives/ 456.7 KB
  3. 📄 report.pdf 2.3 MB
@@ -203,6 +283,7 @@ Commands: [number] to enter, b=back, q=quit, r=refresh
 
 **Navigation Commands:**
 - **Numbers (1-99)**: Enter directory or view file details
+- **0**: Go to parent directory (..)
 - **b**: Go back to parent directory
 - **r**: Refresh file list (clear cache)
 - **q**: Quit browser
@@ -316,10 +397,12 @@ pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pyiclo
 
 ### Phase 1: Core Functionality ✅
 - [x] Basic CLI structure with menu system
-- [x] Calendar module with mock data
+- [x] Calendar module with real iCloud API integration
 - [x] iCloud Drive interactive file browser
 - [x] File navigation and detail views
 - [x] Human-readable file sizes and caching
+- [x] Parent directory navigation (..)
+- [x] Calendar browser with event details
 
 ### Phase 2: API Integration 🚧
 - [ ] iCloud authentication (Apple ID + 2FA)
