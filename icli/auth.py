@@ -109,41 +109,55 @@ class iCloudAuth:
             print("\n🔄 Connecting to iCloud...")
             print("   This may take a few seconds...")
             
+            # Clear any existing session before attempting new authentication so
+            # that a failed re-login never leaves stale state behind.
+            if self.authenticated or self.service:
+                self._clear_session(clear_credentials=False)
+            
+            # Create the service — raises PyiCloudFailedLoginException on wrong credentials.
             try:
-                # Create the service - this will validate credentials
                 self.service = PyiCloudService(apple_id, password)
-                
-                # The best way to verify authentication is to try using the service
-                # Different pyicloud versions have different ways to check this
+            except PyiCloudFailedLoginException:
+                # Wrong password: also wipe any previously saved password so the
+                # user is prompted for a new one on the next attempt.
+                if apple_id and KEYRING_AVAILABLE:
+                    try:
+                        keyring.delete_password("iCloudCLI", apple_id)
+                    except Exception:
+                        pass
+                print("❌ Authentication failed. Check your credentials.")
+                return False
+            except Exception as e:
+                print(f"❌ Authentication failed: {str(e)}")
+                return False
+            
+            # Check 2FA requirement BEFORE accessing any service resource.
+            # While 2FA is pending, every resource access raises an exception;
+            # verifying auth first would make the 2FA flow unreachable.
+            if not self.service.requires_2fa:
+                # Verify authentication by attempting to access a service resource.
                 try:
-                    # Try to get account info - this will fail if not authenticated
                     if hasattr(self.service, 'account'):
-                        account = self.service.account
+                        _ = self.service.account
                     elif hasattr(self.service, 'get_account'):
-                        account = self.service.get_account()
+                        _ = self.service.get_account()
                     else:
-                        # Try to access any service to verify
                         if hasattr(self.service, 'mail'):
                             _ = self.service.mail
                         elif hasattr(self.service, 'calendar'):
                             _ = self.service.calendar
                         else:
-                            # If we can't find a service, try a direct API call
                             _ = self.service.request('/account')
-                    
                 except Exception as auth_error:
+                    self.service = None
                     print(f"❌ Authentication failed: {str(auth_error)}")
                     return False
-                    
-            except Exception as e:
-                print(f"❌ Authentication failed: {str(e)}")
-                return False
-            
-            # Verify authentication was successful
-            if hasattr(self.service, 'authenticated') and not self.service.authenticated:
-                print("❌ Authentication failed: Invalid Apple ID or password")
-                return False
                 
+                if hasattr(self.service, 'authenticated') and not self.service.authenticated:
+                    self.service = None
+                    print("❌ Authentication failed: Invalid Apple ID or password")
+                    return False
+            
             if self.service.requires_2fa:
                 print("\n🔐 Two-Factor Authentication Required")
                 print("   A verification code has been sent to your trusted devices")
@@ -164,6 +178,7 @@ class iCloudAuth:
                             continue
                     except Exception as e:
                         print(f"   ❌ 2FA validation error: {str(e)}")
+                        self.service = None
                         return False
                 
                 # Check if session is trusted
@@ -194,17 +209,21 @@ class iCloudAuth:
             return True
             
         except PyiCloudFailedLoginException:
+            # Caught here only if raised outside the service-creation block
+            # (e.g., during 2FA trust establishment).
+            self.service = None
             print("❌ Authentication failed. Check your credentials.")
             return False
         except Exception as e:
+            self.service = None
             print(f"❌ Authentication error: {str(e)}")
             return False
     
     def logout(self):
         """Logout from iCloud"""
-        if self.service:
+        if self.authenticated or self.service:
             print("\nLogging out...")
-            self._clear_session()
+            self._clear_session(clear_credentials=True)
             print("Logged out successfully")
         else:
             print("Not logged in")
@@ -229,6 +248,7 @@ class iCloudAuth:
                 
                 if self.service.requires_2fa:
                     print("2FA required for session resume")
+                    self.service = None
                     return False
                 
                 self.apple_id = apple_id
@@ -352,13 +372,21 @@ class iCloudAuth:
         # Check if session is still valid
         if self.session_expiry and self.session_expiry < time.time():
             print("Session expired. Please log in again.")
-            self._clear_session()
+            # Preserve keyring credentials on normal expiry — they are still
+            # valid and allow automatic re-authentication via try_resume_session.
+            self._clear_session(clear_credentials=False)
             return False
         
         return True
     
-    def _clear_session(self):
-        """Clear current session data"""
+    def _clear_session(self, clear_credentials=True):
+        """Clear current session data.
+        
+        Args:
+            clear_credentials: If True (default), also delete saved credentials
+                from keyring. Pass False when clearing an expired session so
+                that valid saved credentials are preserved for the next login.
+        """
         self.service = None
         self.authenticated = False
         self.session_token = None
@@ -366,9 +394,12 @@ class iCloudAuth:
         self.session_expiry = None
         self.last_activity = None
         
-        # Clear keyring if apple_id is set
-        if self.apple_id and KEYRING_AVAILABLE:
-            keyring.delete_password("iCloudCLI", self.apple_id)
+        # Optionally remove saved credentials from keyring
+        if clear_credentials and self.apple_id and KEYRING_AVAILABLE:
+            try:
+                keyring.delete_password("iCloudCLI", self.apple_id)
+            except Exception:
+                pass
         
         self.apple_id = None
     
