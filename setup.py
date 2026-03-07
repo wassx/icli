@@ -16,6 +16,8 @@ setup(
         'pyicloud>=2.4.1',
         'requests>=2.31.0',
         'keyring>=24.2.0',
+        'caldav>=1.3',
+        'icalendar>=5.0',
     ],
     python_requires='>=3.6',
 )

@@ -30,11 +30,13 @@ class ICloudAPI:
         from icli.drive import DriveModule
         from icli.calendar import CalendarModule
         from icli.mail import MailModule
+        from icli.reminders import RemindersModule
 
         self.auth = iCloudAuth()
         self._drive = DriveModule(self.auth)
         self._calendar = CalendarModule(self.auth)
         self._mail = MailModule(self.auth)
+        self._reminders = RemindersModule(self.auth)
 
     # ── Authentication ────────────────────────────────────────────────────────
 
@@ -256,6 +258,32 @@ class ICloudAPI:
         """
         self._require_auth()
         return self._mail.get_email(uid=uid, folder=folder)
+
+    # ── Reminders ─────────────────────────────────────────────────────────────
+
+    def list_reminder_lists(self):
+        """Return all Reminders lists as a list of dicts.
+
+        Each dict: name (str), uid (str)
+        """
+        self._require_auth()
+        raw = self._reminders.list_reminder_lists()
+        return [{"name": l["name"], "uid": l["uid"]} for l in raw]
+
+    def list_reminders(self, list_name=None, include_completed=False):
+        """Return reminders (tasks) from iCloud Reminders.
+
+        Args:
+            list_name:          Filter to this list name (case-insensitive substring).
+            include_completed:  Include completed tasks (default False).
+
+        Each task dict: uid, title, list_name, status, completed,
+        due (ISO str | None), priority (0–9), notes
+        """
+        self._require_auth()
+        return self._reminders.list_reminders(
+            list_name=list_name, include_completed=include_completed
+        )
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 

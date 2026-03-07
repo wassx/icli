@@ -14,7 +14,7 @@
 |_|\___|____|___|
 ```
 
-Command-line interface and Python API for **iCloud Calendar**, **iCloud Drive**, and **iCloud Mail**.
+Command-line interface and Python API for **iCloud Calendar**, **iCloud Drive**, **iCloud Mail**, and **iCloud Reminders**.
 
 > Read-only. iCLI never modifies or deletes any iCloud data.
 
@@ -107,13 +107,13 @@ Authentication Successful!
 
 Every subsequent call resumes the saved session silently — no prompts.
 
-### Mail password
+### Mail and Reminders password
 
-iCloud Mail uses IMAP and may need its own app-specific password.
-The first time you open **iCloud Mail** in interactive mode, you'll be prompted to enter one.
-It's verified on the spot and saved to the system keyring.
+iCloud Mail and Reminders both use app-specific passwords (separate from your Apple ID password).
+The first time you access either service in interactive mode, you'll be prompted to enter one.
+The password is verified on the spot and saved to the system keyring so future calls are silent.
 
-You can also set it via environment variable:
+Both services share the same app-specific password.  You can also set it via environment variable:
 
 ```bash
 export ICLOUD_MAIL_PASSWORD="xxxx-xxxx-xxxx-xxxx"
@@ -152,6 +152,18 @@ icli mail list --json
 
 # Read a specific email by UID
 icli mail read 12345 --json
+
+# List all Reminders lists
+icli reminders lists --json
+
+# Pending reminders across all lists
+icli reminders list --json
+
+# Reminders in a specific list
+icli reminders list --list Erinnerungen --json
+
+# All reminders (including completed)
+icli reminders list --all --json
 ```
 
 All commands support `--json` for machine-readable output.
@@ -432,6 +444,12 @@ mail
     --limit N         Number of emails (default: 20)
   read UID            Read a specific email
     --folder FOLDER   Mail folder (default: INBOX)
+
+reminders
+  lists               List all reminder lists
+  list                List reminders (pending by default)
+    --list LIST       Filter to this list (partial, case-insensitive)
+    --all             Include completed reminders
 ```
 
 Full reference: [docs/cli-reference.md](docs/cli-reference.md)  
@@ -444,16 +462,17 @@ Authentication: [docs/authentication.md](docs/authentication.md)
 
 ```
 icli/
-  api.py        ICloudAPI — scripting/agent interface
-  auth.py       Session management, 2FA, keyring
-  calendar.py   Calendar module
-  drive.py      Drive module
-  mail.py       Mail module (IMAP)
-  utils.py      Spinner, separator
-main.py         Interactive menu + argparse dispatcher
-docs/           CLI reference, API docs, auth guide
-tests/          Test suite
-examples/       demo.py, quickstart.py
+  api.py          ICloudAPI — scripting/agent interface
+  auth.py         Session management, 2FA, keyring
+  calendar.py     Calendar module
+  drive.py        Drive module
+  mail.py         Mail module (IMAP)
+  reminders.py    Reminders module (CalDAV/VTODO)
+  utils.py        Spinner, separator
+main.py           Interactive menu + argparse dispatcher
+docs/             CLI reference, API docs, auth guide
+tests/            Test suite
+examples/         demo.py, quickstart.py
 ```
 
 ---

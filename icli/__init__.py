@@ -3,6 +3,7 @@
 from .calendar import CalendarModule
 from .drive import DriveModule
 from .mail import MailModule
+from .reminders import RemindersModule
 from .auth import iCloudAuth
 
 class iCloudCLI:
@@ -11,3 +12,4 @@ class iCloudCLI:
         self.calendar = CalendarModule(self.auth)
         self.drive = DriveModule(self.auth)
         self.mail = MailModule(self.auth)
+        self.reminders = RemindersModule(self.auth)

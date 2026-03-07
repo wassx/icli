@@ -25,15 +25,16 @@ def show_main_menu(cli):
     auth_status = "🔒 Logged in" if cli.auth.is_authenticated() else "🔓 Not logged in"
     print(f"\n=== iCloud CLI - {auth_status} ===")
     print("1) iCloud Mail")
-    print("2) Calendar")
-    print("3) iCloud Drive")
-    print("4) Authentication")
-    print("5) Exit")
+    print("2) Reminders")
+    print("3) Calendar")
+    print("4) iCloud Drive")
+    print("5) Authentication")
+    print("6) Exit")
     print("\n" + separator("-"))
 
 def handle_menu_choice(choice, cli):
     """Handle the user's menu choice"""
-    if choice == "4":
+    if choice == "5":
         print("\n=== Authentication ===")
         auth_status = "Logged in" if cli.auth.is_authenticated() else "Not logged in"
         print(f"Current status: {auth_status}")
@@ -88,7 +89,7 @@ def handle_menu_choice(choice, cli):
                 return True
             else:
                 print("❌ Invalid choice. Please enter 1-2.")
-    elif choice == "5":
+    elif choice == "6":
         print("\nGoodbye!")
         return False
     elif choice == "1":
@@ -104,6 +105,18 @@ def handle_menu_choice(choice, cli):
         elif mail_choice == "3":
             return True
     elif choice == "2":
+        print("\n=== Reminders ===")
+        print("1) Browse all pending reminders")
+        print("2) Browse reminder lists")
+        print("3) Back to main menu")
+        rem_choice = input("\nEnter your choice (1-3): ").strip()
+        if rem_choice == "1":
+            cli.reminders.browse_reminders()
+        elif rem_choice == "2":
+            cli.reminders.browse_lists()
+        elif rem_choice == "3":
+            return True
+    elif choice == "3":
         print("\n=== Calendar Menu ===")
         print("1) Browse events (interactive)")
         print("2) List calendars")
@@ -121,7 +134,7 @@ def handle_menu_choice(choice, cli):
             cli.calendar.show_calendar_grid()
         elif calendar_choice == "5":
             return True
-    elif choice == "3":
+    elif choice == "4":
         print("\n=== iCloud Drive Menu ===")
         print("1) Browse files (interactive tree)")
         print("2) Search files")
@@ -137,7 +150,7 @@ def handle_menu_choice(choice, cli):
         elif drive_choice == "4":
             return True
 
-    else:
+    elif choice not in ("5", "6"):
         print("\nInvalid choice. Please try again.")
     
     return True
@@ -194,10 +207,10 @@ def main():
     try:
         while running:
             show_main_menu(cli)
-            choice = input("\nEnter your choice (1-5): ").strip()
+            choice = input("\nEnter your choice (1-6): ").strip()
             
             # Check if authentication is needed for this choice
-            if choice in ["1", "2", "3"] and not cli.auth.is_authenticated():
+            if choice in ["1", "2", "3", "4"] and not cli.auth.is_authenticated():
                 # Offer login before accessing a service
                 if not require_authentication(cli):
                     continue
@@ -205,7 +218,7 @@ def main():
             running = handle_menu_choice(choice, cli)
             
             # If a service call caused session expiry mid-use, offer re-login
-            if running and choice in ["1", "2", "3"] and not cli.auth.is_authenticated():
+            if running and choice in ["1", "2", "3", "4"] and not cli.auth.is_authenticated():
                 print("\n⚠️  Your session expired during this operation.")
                 relogin = input("   Log in again now? (y/n): ").strip().lower()
                 if relogin == "y":
@@ -432,6 +445,18 @@ def run_cli():
     mr_p.add_argument("--folder", default="INBOX", metavar="FOLDER",
                       help="Mail folder (default: INBOX)")
 
+    # ── reminders ─────────────────────────────────────────────────────────────
+    rem_p = sub.add_parser("reminders", help="iCloud Reminders commands")
+    rem_sub = rem_p.add_subparsers(dest="rem_cmd", required=True, metavar="SUBCOMMAND")
+    rem_sub.add_parser("lists", parents=[_json],
+                        help="List all reminder lists")
+    rem_l = rem_sub.add_parser("list", parents=[_json],
+                                help="List reminders (pending by default)")
+    rem_l.add_argument("--list", dest="list_name", default=None, metavar="LIST",
+                       help="Filter to this list name (partial, case-insensitive)")
+    rem_l.add_argument("--all", dest="include_completed", action="store_true",
+                       help="Include completed reminders")
+
     args = parser.parse_args()
     use_json = args.json
     apple_id = args.apple_id or os.environ.get("ICLOUD_APPLE_ID")
@@ -519,6 +544,14 @@ def run_cli():
                 elif args.mail_cmd == "read":
                     out(_quiet(api.get_email,
                                uid=args.uid, folder=args.folder))
+
+            elif args.command == "reminders":
+                if args.rem_cmd == "lists":
+                    out(_quiet(api.list_reminder_lists))
+                elif args.rem_cmd == "list":
+                    out(_quiet(api.list_reminders,
+                               list_name=args.list_name,
+                               include_completed=args.include_completed))
 
     except (RuntimeError, ValueError) as exc:
         die(str(exc))
