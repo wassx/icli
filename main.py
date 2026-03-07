@@ -96,15 +96,18 @@ def handle_menu_choice(choice, cli):
             print("Invalid choice")
     elif choice == "1":
         print("\n=== Calendar Menu ===")
-        print("1) List events")
-        print("2) Create event")
-        print("3) Back to main menu")
+        print("1) Browse events (interactive)")
+        print("2) List calendars")
+        print("3) List upcoming events")
+        print("4) Back to main menu")
         calendar_choice = input("\nEnter your choice: ").strip()
         if calendar_choice == "1":
-            cli.calendar.list_events()
+            cli.calendar.browse_events()
         elif calendar_choice == "2":
-            print("Create event functionality not yet implemented")
+            cli.calendar.list_calendars()
         elif calendar_choice == "3":
+            cli.calendar.list_events()
+        elif calendar_choice == "4":
             return True
     elif choice == "2":
         print("\n=== iCloud Drive Menu ===")
