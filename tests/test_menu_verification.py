@@ -21,6 +21,9 @@ def test_menu_shortcuts():
         # Mail sub-menu
         ('"1) Inbox overview"', "Mail option 1"),
         ('"2) Browse folders"', "Mail option 2"),
+        # Reminders sub-menu
+        ('"1) Browse all pending reminders"', "Reminders option 1"),
+        ('"2) Browse reminder lists"', "Reminders option 2"),
     ]
 
     errors = []

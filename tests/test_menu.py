@@ -22,10 +22,11 @@ def test_main_menu():
     output = captured_output.getvalue()
     assert "=== iCloud CLI" in output
     assert "1) iCloud Mail" in output
-    assert "2) Calendar" in output
-    assert "3) iCloud Drive" in output
-    assert "4) Authentication" in output
-    assert "5) Exit" in output
+    assert "2) Reminders" in output
+    assert "3) Calendar" in output
+    assert "4) iCloud Drive" in output
+    assert "5) Authentication" in output
+    assert "6) Exit" in output
     
     print("✓ Main menu display test passed")
 
@@ -36,7 +37,7 @@ def test_menu_choices():
     cli = iCloudCLI()
     
     # Test exit choice
-    result = handle_menu_choice("5", cli)
+    result = handle_menu_choice("6", cli)
     assert result == False
     print("✓ Exit choice test passed")
     

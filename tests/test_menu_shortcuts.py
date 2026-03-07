@@ -14,18 +14,20 @@ def test_menu_shortcuts():
     # Expected items present in the show_main_menu print statements
     expected_menu_items = [
         '"1) iCloud Mail"',
-        '"2) Calendar"',
-        '"3) iCloud Drive"',
-        '"4) Authentication"',
-        '"5) Exit"',
+        '"2) Reminders"',
+        '"3) Calendar"',
+        '"4) iCloud Drive"',
+        '"5) Authentication"',
+        '"6) Exit"',
     ]
     # Expected handlers in handle_menu_choice
     expected_handlers = [
-        'choice == "4"',   # Authentication
-        'choice == "5"',   # Exit
+        'choice == "5"',   # Authentication
+        'choice == "6"',   # Exit
         'choice == "1"',   # Mail
-        'choice == "2"',   # Calendar
-        'choice == "3"',   # Drive
+        'choice == "2"',   # Reminders
+        'choice == "3"',   # Calendar
+        'choice == "4"',   # Drive
     ]
 
     errors = []
@@ -42,12 +44,12 @@ def test_menu_shortcuts():
         sys.exit(1)
 
     print("✅ All menu items present and handlers match.")
-    print("  - elif choice == '4': # Exit ✅")
+    print("  - elif choice == '6': # Exit ✅")
     
     print("\n🎉 All menu shortcuts are correctly implemented!")
     print("\nThe fix ensures that:")
     print("• Menu display matches code implementation")
-    print("• No broken shortcuts after mail removal")
+    print("• No broken shortcuts after Reminders addition")
     print("• User input is handled correctly")
 
 if __name__ == "__main__":
