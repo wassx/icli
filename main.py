@@ -4,6 +4,10 @@
 import time
 from icli import iCloudCLI
 
+def pause():
+    """Wait for the user to press Enter before redrawing the menu."""
+    input("\nPress Enter to continue...")
+
 def show_main_menu(cli):
     """Display the main menu and handle user input"""
     auth_status = "🔒 Logged in" if cli.auth.is_authenticated() else "🔓 Not logged in"
@@ -162,27 +166,30 @@ def main():
     
     running = True
     
-    while running:
-        show_main_menu(cli)
-        choice = input("\nEnter your choice (1-4): ").strip()
-        
-        # Check if authentication is needed for this choice
-        if choice in ["1", "2"] and not cli.auth.is_authenticated():
-            # Offer login before accessing a service
-            if not require_authentication(cli):
-                continue
-        
-        running = handle_menu_choice(choice, cli)
-        
-        # If a service call caused session expiry mid-use, offer re-login
-        if running and choice in ["1", "2"] and not cli.auth.is_authenticated():
-            print("\n⚠️  Your session expired during this operation.")
-            relogin = input("   Log in again now? (y/n): ").strip().lower()
-            if relogin == "y":
-                cli.auth.login()
-        
-        if running:
-            input("\nPress Enter to continue...")
+    try:
+        while running:
+            show_main_menu(cli)
+            choice = input("\nEnter your choice (1-4): ").strip()
+            
+            # Check if authentication is needed for this choice
+            if choice in ["1", "2"] and not cli.auth.is_authenticated():
+                # Offer login before accessing a service
+                if not require_authentication(cli):
+                    continue
+            
+            running = handle_menu_choice(choice, cli)
+            
+            # If a service call caused session expiry mid-use, offer re-login
+            if running and choice in ["1", "2"] and not cli.auth.is_authenticated():
+                print("\n⚠️  Your session expired during this operation.")
+                relogin = input("   Log in again now? (y/n): ").strip().lower()
+                if relogin == "y":
+                    cli.auth.login()
+            
+            if running:
+                pause()
+    except KeyboardInterrupt:
+        print("\n\nGoodbye!")
     
     return False
 

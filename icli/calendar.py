@@ -339,54 +339,57 @@ class CalendarModule:
         # Cache calendar list for this session; re-fetch only on 'r'
         cached_calendars = None
         
-        while True:
-            if cached_calendars is None:
-                cached_calendars = self.list_calendars()
-            calendars = cached_calendars
-            
-            if not calendars:
-                break
-            
-            # Show actual count in prompt
-            calendar_choice = input(f"\n📅 Select calendar (1-{len(calendars)}, r=refresh, q=quit): ").strip().lower()
-            
-            if calendar_choice == 'r':
-                cached_calendars = None  # Force re-fetch on next iteration
-                continue
-            if calendar_choice == 'q':
-                print("Exiting calendar browser...")
-                break
-            
-            if calendar_choice.isdigit():
-                calendar_index = int(calendar_choice)
-                if 1 <= calendar_index <= len(calendars):
-                    # List events for selected calendar
-                    events = self.list_events(calendar_index)
-                    if events:
-                        # Ask user to select an event
-                        event_choice = input(f"\n📅 Select event (1-{len(events)}, b=back, q=quit): ").strip().lower()
-                        
-                        if event_choice == 'q':
-                            print("Exiting calendar browser...")
-                            break
-                        elif event_choice == 'b':
-                            continue  # Back to calendar selection
-                        elif event_choice.isdigit():
-                            event_index = int(event_choice)
-                            if 1 <= event_index <= len(events):
-                                selected_event = events[event_index - 1]
-                                self.show_event_details(selected_event)
+        try:
+            while True:
+                if cached_calendars is None:
+                    cached_calendars = self.list_calendars()
+                calendars = cached_calendars
+                
+                if not calendars:
+                    break
+                
+                # Show actual count in prompt
+                calendar_choice = input(f"\n📅 Select calendar (1-{len(calendars)}, r=refresh, q=quit): ").strip().lower()
+                
+                if calendar_choice == 'r':
+                    cached_calendars = None  # Force re-fetch on next iteration
+                    continue
+                if calendar_choice == 'q':
+                    print("Exiting calendar browser...")
+                    break
+                
+                if calendar_choice.isdigit():
+                    calendar_index = int(calendar_choice)
+                    if 1 <= calendar_index <= len(calendars):
+                        # List events for selected calendar
+                        events = self.list_events(calendar_index)
+                        if events:
+                            # Ask user to select an event
+                            event_choice = input(f"\n📅 Select event (1-{len(events)}, b=back, q=quit): ").strip().lower()
+                            
+                            if event_choice == 'q':
+                                print("Exiting calendar browser...")
+                                break
+                            elif event_choice == 'b':
+                                continue  # Back to calendar selection
+                            elif event_choice.isdigit():
+                                event_index = int(event_choice)
+                                if 1 <= event_index <= len(events):
+                                    selected_event = events[event_index - 1]
+                                    self.show_event_details(selected_event)
+                                else:
+                                    print("❌ Invalid event number")
                             else:
-                                print("❌ Invalid event number")
+                                print("❌ Invalid choice")
                         else:
-                            print("❌ Invalid choice")
+                            print("   No events found. Press Enter to choose a different calendar.")
+                            input()
                     else:
-                        print("   No events found. Press Enter to choose a different calendar.")
-                        input()
+                        print(f"❌ Please enter a number between 1 and {len(calendars)}")
                 else:
-                    print(f"❌ Please enter a number between 1 and {len(calendars)}")
-            else:
-                print("❌ Invalid choice. Use a number, r=refresh, or q=quit.")
+                    print("❌ Invalid choice. Use a number, r=refresh, or q=quit.")
+        except KeyboardInterrupt:
+            print("\n❌ Interrupted. Returning to menu.")
     
     def create_event(self, title, date, start_time):
         """Create a new calendar event - DISABLED for read-only mode"""

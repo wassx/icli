@@ -1,5 +1,9 @@
 """iCloud Drive module for iCloud CLI"""
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class DriveModule:
     def __init__(self, auth=None):
         self.auth = auth
@@ -20,23 +24,26 @@ class DriveModule:
         print("Commands: [number] open/enter, 0=parent dir, b/q=quit, r=refresh")
         print("=" * 60)
         
-        while True:
-            if not self._show_current_directory():
-                break
-            
-            # Get user input
-            choice = input("\n📂 Enter choice: ").strip().lower()
-            
-            if choice in ('q', 'b'):
-                print("Exiting iCloud Drive browser...")
-                break
-            elif choice == 'r':
-                self.file_cache = {}  # Clear cache
-                print("🔄 Refreshed file list")
-            elif choice.isdigit():
-                self._handle_file_selection(int(choice))
-            else:
-                print("❌ Invalid choice. Use a number, 0=parent dir, b/q=quit, r=refresh")
+        try:
+            while True:
+                if not self._show_current_directory():
+                    break
+                
+                # Get user input
+                choice = input("\n📂 Enter choice: ").strip().lower()
+                
+                if choice in ('q', 'b'):
+                    print("Exiting iCloud Drive browser...")
+                    break
+                elif choice == 'r':
+                    self.file_cache = {}  # Clear cache
+                    print("🔄 Refreshed file list")
+                elif choice.isdigit():
+                    self._handle_file_selection(int(choice))
+                else:
+                    print("❌ Invalid choice. Use a number, 0=parent dir, b/q=quit, r=refresh")
+        except KeyboardInterrupt:
+            print("\n❌ Interrupted. Returning to menu.")
     
     def _show_current_directory(self):
         """Display current directory contents"""
@@ -108,7 +115,8 @@ class DriveModule:
             return True
             
         except Exception as e:
-            print(f"❌ Error loading directory: {str(e)}")
+            logger.debug("Error loading directory: %s", e, exc_info=True)
+            print("❌ Error loading directory. Please check your connection.")
             return False
     
     def _show_breadcrumb(self):
@@ -177,7 +185,8 @@ class DriveModule:
                 print("❌ Invalid selection")
                 
         except Exception as e:
-            print(f"❌ Error handling selection: {str(e)}")
+            logger.debug("Error handling selection: %s", e, exc_info=True)
+            print("❌ Error handling selection. Please try again.")
     
     def _show_file_details(self, node):
         """Show detailed information about a file"""
@@ -403,8 +412,8 @@ class DriveModule:
             return matching_files
             
         except Exception as e:
-            print(f"❌ Error searching files: {str(e)}")
-            print("   Please check your internet connection and try again.")
+            logger.debug("Error searching files: %s", e, exc_info=True)
+            print("❌ Error searching files. Please check your connection.")
             return []
     
     def _search_node_recursive(self, node, query, file_type, min_size, max_size):
