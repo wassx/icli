@@ -119,7 +119,7 @@ def handle_menu_choice(choice, cli):
         if drive_choice == "1":
             cli.drive.browse_files()
         elif drive_choice == "2":
-            self._handle_drive_search(cli.drive)
+            _handle_drive_search(cli.drive)
         elif drive_choice == "3":
             cli.drive.list_files()
         elif drive_choice == "4":
@@ -207,7 +207,7 @@ def main():
     
     return False
 
-def _handle_drive_search(self, drive_module):
+def _handle_drive_search(drive_module):
     """Handle iCloud Drive file search with interactive prompts"""
     print("\n=== iCloud Drive Search ===")
     print("🔍 Search your iCloud Drive files")
