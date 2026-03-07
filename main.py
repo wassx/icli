@@ -16,7 +16,7 @@ def show_main_menu(cli):
 
 def handle_menu_choice(choice, cli):
     """Handle the user's menu choice"""
-    if choice == "4":
+    if choice == "3":
         print("\n=== Authentication ===")
         auth_status = "Logged in" if cli.auth.is_authenticated() else "Not logged in"
         print(f"Current status: {auth_status}")
@@ -94,6 +94,9 @@ def handle_menu_choice(choice, cli):
             return True
         else:
             print("Invalid choice")
+    elif choice == "4":
+        print("\nGoodbye!")
+        return False
     elif choice == "1":
         print("\n=== Calendar Menu ===")
         print("1) Browse events (interactive)")
