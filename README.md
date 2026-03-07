@@ -15,12 +15,50 @@ Command-line interface and Python API for **iCloud Calendar** and **iCloud Drive
 
 ## Install
 
+### Pre-built binary (recommended)
+
+Download the latest binary for your platform from
+[Releases](../../releases/latest):
+
+| Platform | File |
+|----------|------|
+| Linux x86_64 | `icli-linux-amd64` |
+| macOS Apple Silicon | `icli-macos-arm64` |
+| macOS Intel | `icli-macos-amd64` |
+| Windows x86_64 | `icli-windows-amd64.exe` |
+
+**Linux / macOS:**
+
+```bash
+# Download (example: Linux)
+curl -Lo icli https://github.com/<owner>/icli/releases/latest/download/icli-linux-amd64
+chmod +x icli
+sudo mv icli /usr/local/bin/
+
+# Verify
+icli --help
+```
+
+**Windows (PowerShell):**
+
+```powershell
+Invoke-WebRequest -Uri https://github.com/<owner>/icli/releases/latest/download/icli-windows-amd64.exe -OutFile icli.exe
+.\icli.exe --help
+```
+
+No Python, pip, or virtual environment required.
+
+### From source
+
 ```bash
 git clone <repo>
 cd icli
 python -m venv myenv && source myenv/bin/activate
 pip install -r requirements.txt
 ```
+
+When running from source, replace `icli` with `python main.py` in all
+examples below.
 
 ---
 
@@ -31,7 +69,7 @@ Apple requires an **app-specific password** — generate one at
 [appleid.apple.com → Sign-In & Security → App-Specific Passwords](https://appleid.apple.com).
 
 ```bash
-python main.py auth login
+icli auth login
 ```
 
 ```
@@ -54,10 +92,38 @@ Every subsequent call resumes the saved session silently — no prompts.
 
 ---
 
+## Quick examples
+
+```bash
+# Check session
+icli auth status --json
+
+# List calendars
+icli calendar list --json
+
+# Next 7 days of events in "Work" calendar
+icli calendar events --calendar Work --days 7 --json
+
+# Browse iCloud Drive
+icli drive list --json
+icli drive list --path /Documents --json
+
+# Search for PDFs over 500 KB
+icli drive search --type pdf --min 500 --json
+
+# Download a file
+icli drive download /Documents/report.pdf
+icli drive download /Documents/report.pdf -o ~/Downloads/report.pdf --json
+```
+
+All commands support `--json` for machine-readable output.
+
+---
+
 ## Interactive menu
 
 ```bash
-python main.py
+icli
 ```
 
 ```
@@ -87,12 +153,10 @@ Append `--json` to get machine-readable output.
 ### Auth
 
 ```bash
-# Check session state
-python main.py auth status
-
+icli auth status
 # authenticated: False
 
-python main.py auth status --json
+icli auth status --json
 # {
 #   "authenticated": true,
 #   "apple_id": "you@icloud.com",
@@ -101,10 +165,10 @@ python main.py auth status --json
 # }
 
 # Save credentials interactively
-python main.py auth login
+icli auth login
 
 # Remove session and keyring entry
-python main.py auth logout --json
+icli auth logout --json
 # {"ok": true, "message": "Logged out"}
 ```
 
@@ -112,17 +176,17 @@ python main.py auth logout --json
 
 ```bash
 # List all calendars
-python main.py calendar list --json
+icli calendar list --json
 # [
 #   {"id": 1, "name": "Work",     "color": "#0E60CF", "default": false},
 #   {"id": 2, "name": "Personal", "color": "#1CB84A", "default": true}
 # ]
 
 # Upcoming events — next 14 days (default)
-python main.py calendar events --json
+icli calendar events --json
 
 # Events in a specific calendar, narrower window
-python main.py calendar events --calendar Work --days 7 --json
+icli calendar events --calendar Work --days 7 --json
 # [
 #   {
 #     "title": "Standup",
@@ -140,20 +204,20 @@ python main.py calendar events --calendar Work --days 7 --json
 
 ```bash
 # List root directory
-python main.py drive list --json
+icli drive list --json
 # [
 #   {"name": "Documents", "type": "folder", "path": "/Documents", "size_bytes": 0,       "size": "0 B"   },
 #   {"name": "photo.jpg", "type": "file",   "path": "/photo.jpg", "size_bytes": 3145728, "size": "3.0 MB"}
 # ]
 
 # List a subdirectory
-python main.py drive list --path /Documents --json
+icli drive list --path /Documents --json
 
 # Search by filename
-python main.py drive search report --json
+icli drive search report --json
 
 # Search with filters
-python main.py drive search --type pdf --min 500 --json
+icli drive search --type pdf --min 500 --json
 # [
 #   {
 #     "name": "Q1 report.pdf",
@@ -167,11 +231,11 @@ python main.py drive search --type pdf --min 500 --json
 # ]
 
 # Files between 1 MB and 10 MB
-python main.py drive search --min 1024 --max 10240 --json
+icli drive search --min 1024 --max 10240 --json
 
 # Download a file
-python main.py drive download /Documents/report.pdf
-python main.py drive download /Documents/report.pdf --output ~/Downloads/report.pdf --json
+icli drive download /Documents/report.pdf
+icli drive download /Documents/report.pdf --output ~/Downloads/report.pdf --json
 # {"ok": true, "local_path": "/home/user/Downloads/report.pdf", "size_bytes": 614400, "size": "600.0 KB"}
 ```
 
@@ -227,7 +291,7 @@ Or from the shell:
 ```bash
 ICLOUD_APPLE_ID=you@icloud.com \
 ICLOUD_PASSWORD=xxxx-xxxx-xxxx-xxxx \
-python main.py calendar events --json
+icli calendar events --json
 ```
 
 ---
@@ -236,14 +300,19 @@ python main.py calendar events --json
 
 ```bash
 # Print today's event titles with jq
-python main.py calendar events --days 1 --json | jq '.[].title'
+icli calendar events --days 1 --json | jq '.[].title'
 
 # Count files in a directory
-python main.py drive list --path /Documents --json | jq length
+icli drive list --path /Documents --json | jq length
 
 # Find large PDFs and extract paths
-python main.py drive search --type pdf --min 10240 --json \
+icli drive search --type pdf --min 10240 --json \
   | jq -r '.[].path'
+
+# Download all PDFs in a folder
+icli drive search --type pdf --json \
+  | jq -r '.[].path' \
+  | while read -r p; do icli drive download "$p" -o ./pdfs/; done
 ```
 
 ---
@@ -251,7 +320,7 @@ python main.py drive search --type pdf --min 10240 --json \
 ## Command reference
 
 ```
-python main.py [--apple-id EMAIL] [--password PASSWORD] COMMAND SUBCOMMAND [--json]
+icli [--apple-id EMAIL] [--password PASSWORD] COMMAND SUBCOMMAND [--json]
 
 auth
   status              Current session state
