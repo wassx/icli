@@ -17,7 +17,7 @@ class DriveModule:
         
         print("\n=== iCloud Drive Browser ===")
         print("📁 Navigating your iCloud Drive files")
-        print("Commands: [number] to enter, 0 for parent (..), b=back, q=quit, r=refresh")
+        print("Commands: [number] open/enter, 0=parent dir, b/q=quit, r=refresh")
         print("=" * 60)
         
         while True:
@@ -27,18 +27,16 @@ class DriveModule:
             # Get user input
             choice = input("\n📂 Enter choice: ").strip().lower()
             
-            if choice == 'q':
+            if choice in ('q', 'b'):
                 print("Exiting iCloud Drive browser...")
                 break
-            elif choice == 'b':
-                self._go_back()
             elif choice == 'r':
                 self.file_cache = {}  # Clear cache
                 print("🔄 Refreshed file list")
             elif choice.isdigit():
                 self._handle_file_selection(int(choice))
             else:
-                print("❌ Invalid choice. Use numbers, 'b' for back, 'q' to quit, 'r' to refresh")
+                print("❌ Invalid choice. Use a number, 0=parent dir, b/q=quit, r=refresh")
     
     def _show_current_directory(self):
         """Display current directory contents"""
@@ -186,30 +184,28 @@ class DriveModule:
         print(f"\n📄 File Details: {node.name}")
         print("=" * 40)
         
-        # Determine type from node
         node_type = "Directory" if node.type == "folder" else "File"
-        print(f"Type: {node_type}")
-        print(f"Path: {self.current_path}/{node.name}")
+        print(f"Type:  {node_type}")
+        print(f"Path:  {self.current_path}/{node.name}")
         
-        # Get size from node data
         size = self._get_node_size(node)
         if size > 0:
-            print(f"Size: {self._format_size(size)} ({size} bytes)")
+            print(f"Size:  {self._format_size(size)} ({size:,} bytes)")
         else:
-            print("Size: -")
+            print("Size:  -")
         
-        # Get dates from node data if available
+        # Format dates in a human-readable way instead of raw ISO strings
         if hasattr(node, 'data') and node.data:
-            if 'dateCreated' in node.data:
-                print(f"Created: {node.data['dateCreated']}")
-            if 'dateModified' in node.data:
-                print(f"Modified: {node.data['dateModified']}")
+            for field, label in (('dateCreated', 'Created'), ('dateModified', 'Modified')):
+                raw = node.data.get(field)
+                if raw:
+                    print(f"{label}: {self._format_date(raw)}")
         
         print("\nOptions:")
         print("d. Download this file")
         print("b. Back to directory listing")
         
-        choice = input("Choose option: ").strip().lower()
+        choice = input("Choose option (d/b): ").strip().lower()
         
         if choice == 'd':
             self._download_file_prompt(node)
@@ -328,6 +324,24 @@ class DriveModule:
                 return f"{size_bytes:.1f} {unit}"
             size_bytes /= 1024.0
         return f"{size_bytes:.1f} PB"
+    
+    def _format_date(self, raw):
+        """Format a date value (ISO string or datetime) as YYYY-MM-DD HH:MM."""
+        if not raw:
+            return "-"
+        try:
+            from datetime import datetime
+            if isinstance(raw, str):
+                # Strip trailing Z / timezone for simple fromisoformat
+                clean = raw.rstrip('Z').split('+')[0].split('-00:00')[0]
+                dt = datetime.fromisoformat(clean)
+            elif hasattr(raw, 'strftime'):
+                dt = raw
+            else:
+                return str(raw)
+            return dt.strftime("%Y-%m-%d %H:%M")
+        except Exception:
+            return str(raw)
     
     def search_files(self, query="", file_type=None, min_size=None, max_size=None):
         """
