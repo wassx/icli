@@ -1,6 +1,8 @@
 """Calendar module for iCloud CLI - Real iCloud Calendar Integration"""
 
 from datetime import datetime, timedelta
+from calendar import monthrange, month_name
+from collections import defaultdict
 
 class CalendarModule:
     def __init__(self, auth=None):
@@ -393,3 +395,157 @@ class CalendarModule:
         """Delete an event - DISABLED for read-only mode"""
         print("❌ Event deletion is disabled in read-only mode")
         return False
+    
+    def show_calendar_grid(self, year=None, month=None):
+        """
+        Display calendar events in a grid view
+        
+        Args:
+            year: Year to display (current year if None)
+            month: Month to display (current month if None)
+        """
+        if not self.auth or not self.auth.is_authenticated():
+            print("❌ Not authenticated. Please log in to access your iCloud calendar.")
+            return False
+        
+        # Check session activity
+        self.auth.check_session_activity()
+        
+        try:
+            calendar_service = self.auth.get_calendar_service()
+            if not calendar_service:
+                print("❌ Calendar service not available")
+                return False
+            
+            # Use current year/month if not specified
+            today = datetime.today()
+            year = year if year is not None else today.year
+            month = month if month is not None else today.month
+            
+            print(f"\n📅 Calendar Grid View - {month_name[month]} {year}")
+            print("=" * 70)
+            
+            # Get all events for this month
+            first_day, num_days = monthrange(year, month)
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month, num_days, 23, 59, 59)
+            
+            events = calendar_service.get_events(
+                from_dt=start_date,
+                to_dt=end_date,
+                as_objs=True
+            )
+            
+            # Organize events by day
+            events_by_day = defaultdict(list)
+            for event in events:
+                if event.start_date:
+                    day = event.start_date.day
+                    events_by_day[day].append(event)
+            
+            # Display calendar grid
+            self._display_calendar_grid(year, month, num_days, first_day, events_by_day)
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error loading calendar grid: {str(e)}")
+            return False
+    
+    def _display_calendar_grid(self, year, month, num_days, first_day, events_by_day):
+        """
+        Display calendar grid with events
+        
+        Args:
+            year: Year being displayed
+            month: Month being displayed
+            num_days: Number of days in the month
+            first_day: Day of week for first day (0=Monday, 6=Sunday)
+            events_by_day: Dictionary mapping day to events
+        """
+        # Calendar header
+        days_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        print("   ", end="")
+        for day in days_of_week:
+            print(f" {day:^5}", end="")
+        print()
+        
+        # Calendar grid
+        print("   ", end="")
+        for _ in range(first_day):
+            print("     ", end="")
+        
+        for day in range(1, num_days + 1):
+            # Print day number
+            print(f" {day:>3} ", end="")
+            
+            # Check if there are events on this day
+            if day in events_by_day:
+                print("📅", end="")
+            else:
+                print(" ", end="")
+            
+            # New line for Sunday
+            if (day + first_day) % 7 == 0:
+                print()
+                if day < num_days:
+                    print("   ", end="")
+        
+        print("\n")
+        print("=" * 70)
+        
+        # Show event legend
+        if events_by_day:
+            print("\n📅 Events this month:")
+            for day, events in sorted(events_by_day.items()):
+                print(f"  {month_name[month]} {day}: {len(events)} event(s)")
+        else:
+            print("\nNo events this month")
+        
+        # Offer to view specific day
+        print("\nOptions:")
+        print("1. View specific day")
+        print("2. Back to calendar menu")
+        
+        choice = input("\nEnter your choice: ").strip()
+        if choice == "1":
+            day_choice = input("Enter day number (1-31): ").strip()
+            if day_choice.isdigit():
+                day_num = int(day_choice)
+                if 1 <= day_num <= num_days:
+                    self._show_day_events(year, month, day_num, events_by_day.get(day_num, []))
+                else:
+                    print("❌ Invalid day number")
+        
+    def _show_day_events(self, year, month, day, events):
+        """
+        Show events for a specific day
+        """
+        print(f"\n📅 Events on {month_name[month]} {day}, {year}")
+        print("=" * 60)
+        
+        if not events:
+            print("No events on this day")
+            return
+        
+        for i, event in enumerate(events, 1):
+            event_info = self._format_event_for_display(event, i)
+            print(f"{i:2d}. {event_info['display']}")
+        
+        print("=" * 60)
+        
+        # Offer to view event details
+        print("\nOptions:")
+        print("1. View event details")
+        print("2. Back to grid view")
+        
+        choice = input("\nEnter your choice: ").strip()
+        if choice == "1":
+            event_choice = input("Enter event number: ").strip()
+            if event_choice.isdigit():
+                event_index = int(event_choice) - 1
+                if 0 <= event_index < len(events):
+                    self.show_event_details({
+                        'id': event_index + 1,
+                        'object': events[event_index]
+                    })
