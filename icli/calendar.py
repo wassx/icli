@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timedelta
 from calendar import monthrange, month_name
 from collections import defaultdict
+from icli.utils import separator, Spinner
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ class CalendarModule:
                 return []
             
             print(f"📅 Found {len(calendars)} calendars:")
-            print("=" * 60)
+            print(separator())
             
             calendar_list = []
             for i, calendar in enumerate(calendars, 1):
@@ -102,7 +103,7 @@ class CalendarModule:
                 if calendar.description:
                     print(f"     {calendar.description}")
             
-            print("=" * 60)
+            print(separator())
             return calendar_list
             
         except Exception as e:
@@ -132,26 +133,25 @@ class CalendarModule:
                 if calendars and 1 <= calendar_index <= len(calendars):
                     target_calendar = calendars[calendar_index - 1]['object']
             
-            print("📅 Loading events from iCloud...")
-            
-            # Calculate date range (today to days_ahead days from now)
+            # Calculate date range
             today = datetime.today()
             end_date = today + timedelta(days=days_ahead)
             
-            # Get events for the date range
-            if target_calendar:
-                all_events = calendar_service.get_events(
-                    from_dt=today, 
-                    to_dt=end_date, 
-                    as_objs=True
-                )
-                events = [e for e in all_events if hasattr(e, 'pguid') and e.pguid == target_calendar.guid]
-            else:
-                events = calendar_service.get_events(
-                    from_dt=today, 
-                    to_dt=end_date, 
-                    as_objs=True
-                )
+            with Spinner("Loading events from iCloud"):
+                # Get events for the date range
+                if target_calendar:
+                    all_events = calendar_service.get_events(
+                        from_dt=today, 
+                        to_dt=end_date, 
+                        as_objs=True
+                    )
+                    events = [e for e in all_events if hasattr(e, 'pguid') and e.pguid == target_calendar.guid]
+                else:
+                    events = calendar_service.get_events(
+                        from_dt=today, 
+                        to_dt=end_date, 
+                        as_objs=True
+                    )
             
             if not events:
                 print(f"ℹ️  No upcoming events in the next {days_ahead} days.")
@@ -164,7 +164,7 @@ class CalendarModule:
             events.sort(key=lambda x: x.start_date if x.start_date else datetime.min)
             
             print(f"📅 Found {len(events)} upcoming events (next {days_ahead} days):")
-            print("=" * 80)
+            print(separator())
             
             event_list = []
             for i, event in enumerate(events, 1):
@@ -172,7 +172,7 @@ class CalendarModule:
                 event_list.append(event_info)
                 print(f"{i:2d}. {event_info['display']}")
             
-            print("=" * 80)
+            print(separator())
             return event_list
             
         except Exception as e:
@@ -249,7 +249,7 @@ class CalendarModule:
             return
         
         print("\n📅 Event Details")
-        print("=" * 60)
+        print(separator())
         
         # Title
         title = event.title if event.title else "Untitled Event"
@@ -320,7 +320,7 @@ class CalendarModule:
         if hasattr(event, 'calendar') and event.calendar:
             print(f"\n📆 Calendar: {event.calendar.title}")
         
-        print("=" * 60)
+        print(separator())
     
     def browse_events(self):
         """Interactive calendar event browser"""
@@ -334,7 +334,7 @@ class CalendarModule:
         print("\n=== iCloud Calendar Browser ===")
         print("📅 Viewing your iCloud calendar events")
         print("Commands: [number] to view event, b=back, q=quit, r=refresh")
-        print("=" * 60)
+        print(separator())
         
         # Cache calendar list for this session; re-fetch only on 'r'
         cached_calendars = None
@@ -433,7 +433,7 @@ class CalendarModule:
             month = month if month is not None else today.month
             
             print(f"\n📅 Calendar Grid View - {month_name[month]} {year}")
-            print("=" * 70)
+            print(separator())
             
             # Get all events for this month
             first_day, num_days = monthrange(year, month)
@@ -502,7 +502,7 @@ class CalendarModule:
                     print("   ", end="")
         
         print("\n")
-        print("=" * 70)
+        print(separator())
         
         # Show event legend
         if events_by_day:
@@ -532,7 +532,7 @@ class CalendarModule:
         Show events for a specific day
         """
         print(f"\n📅 Events on {month_name[month]} {day}, {year}")
-        print("=" * 60)
+        print(separator())
         
         if not events:
             print("No events on this day")
@@ -542,7 +542,7 @@ class CalendarModule:
             event_info = self._format_event_for_display(event, i)
             print(f"{i:2d}. {event_info['display']}")
         
-        print("=" * 60)
+        print(separator())
         
         # Offer to view event details
         print("\nOptions:")

@@ -1,6 +1,7 @@
 """iCloud Drive module for iCloud CLI"""
 
 import logging
+from icli.utils import separator, Spinner
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ class DriveModule:
         print("\n=== iCloud Drive Browser ===")
         print("📁 Navigating your iCloud Drive files")
         print("Commands: [number] open/enter, 0=parent dir, b/q=quit, r=refresh")
-        print("=" * 60)
+        print(separator())
         
         try:
             while True:
@@ -64,9 +65,8 @@ class DriveModule:
             if cache_key in self.file_cache:
                 children = self.file_cache[cache_key]
             else:
-                print(f"📂 Loading: {self.current_path}...")
-                # Get full node objects directly
-                children = current_node.get_children()
+                with Spinner(f"Loading {self.current_path}"):
+                    children = current_node.get_children()
                 self.file_cache[cache_key] = children
             
             if not children:
@@ -88,7 +88,7 @@ class DriveModule:
             
             # Display files
             print(f"\n📁 Contents ({len(items)} items):")
-            print("-" * 60)
+            print(separator("-"))
             
             # Show parent directory first (if present)
             if items and items[0][0] == "..":
@@ -191,7 +191,7 @@ class DriveModule:
     def _show_file_details(self, node):
         """Show detailed information about a file"""
         print(f"\n📄 File Details: {node.name}")
-        print("=" * 40)
+        print(separator("-"))
         
         node_type = "Directory" if node.type == "folder" else "File"
         print(f"Type:  {node_type}")
@@ -378,37 +378,32 @@ class DriveModule:
                 print("❌ Drive service not available")
                 return []
             
-            print(f"🔍 Searching iCloud Drive for '{query}'...")
+            print(f"\n🔍 Searching iCloud Drive for '{query}'...")
             
             # Start from root and search recursively
-            root_node = drive_service.root
-            if not root_node:
-                print("❌ Could not access iCloud Drive root")
-                return []
-            
-            # Search through the entire drive
-            matching_files = self._search_node_recursive(
-                root_node, 
-                query, 
-                file_type, 
-                min_size, 
-                max_size
-            )
+            with Spinner("Searching iCloud Drive"):
+                root_node = drive_service.root
+                if not root_node:
+                    print("❌ Could not access iCloud Drive root")
+                    return []
+                matching_files = self._search_node_recursive(
+                    root_node, query, file_type, min_size, max_size
+                )
             
             if not matching_files:
-                print(f"🔍 No files found matching your search criteria")
+                print("🔍 No files found matching your search criteria")
                 return []
             
             print(f"🔍 Found {len(matching_files)} matching files:")
-            print("=" * 80)
+            print(separator())
             
-            for i, file_info in enumerate(matching_files[:20], 1):  # Show first 20
+            for i, file_info in enumerate(matching_files[:20], 1):
                 self._display_search_result(file_info, i)
             
             if len(matching_files) > 20:
                 print(f"\n📝 Showing first 20 of {len(matching_files)} results")
             
-            print("=" * 80)
+            print(separator())
             return matching_files
             
         except Exception as e:

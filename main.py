@@ -3,6 +3,7 @@
 
 import time
 from icli import iCloudCLI
+from icli.utils import separator, Spinner
 
 def pause():
     """Wait for the user to press Enter before redrawing the menu."""
@@ -16,7 +17,7 @@ def show_main_menu(cli):
     print("2) iCloud Drive")
     print("3) Authentication")
     print("4) Exit")
-    print("\n===================")
+    print("\n" + separator("-"))
 
 def handle_menu_choice(choice, cli):
     """Handle the user's menu choice"""
@@ -120,7 +121,7 @@ def handle_menu_choice(choice, cli):
 def require_authentication(cli):
     """Prompt the user to log in before accessing a service."""
     print("\n❌ Authentication Required")
-    print("=" * 40)
+    print(separator())
     print("To access iCloud services, please log in first.")
     print("\n1) Login to iCloud")
     print("2) Exit")
@@ -148,7 +149,7 @@ def main():
     
     # Welcome message
     print("Welcome to iCloud CLI")
-    print("=" * 40)
+    print(separator())
     print("A command-line interface for your iCloud services")
     
     # Dependency check (outside the constructor so no side-effects in __init__)
@@ -209,7 +210,7 @@ def _handle_drive_search(drive_module):
     print("     budget type=xlsx         → xlsx files with 'budget' in name")
     print("     type=pdf min=500         → PDF files ≥ 500 KB")
     print("     min=1024 max=10240       → files between 1 MB and 10 MB")
-    print("=" * 60)
+    print(separator())
     
     raw = input("\n🔎 Search: ").strip()
     if not raw:
@@ -251,7 +252,7 @@ def _handle_drive_search(drive_module):
         print(f"   Size: {lo} → {hi}")
     else:
         print("   Size: (any)")
-    print("=" * 60)
+    print(separator())
     
     results = drive_module.search_files(
         query=query,
