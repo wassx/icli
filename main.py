@@ -164,16 +164,19 @@ def main():
         choice = input("\nEnter your choice (1-4): ").strip()
         
         # Check if authentication is needed for this choice
-        if choice in ["1", "2", "3"] and not cli.auth.is_authenticated():
-            # Ask user if they want to authenticate
-            if require_authentication(cli):
-                # User successfully logged in, continue with their choice
-                pass  # Will handle the choice below
-            else:
-                # User chose demo mode, continue with mock data
+        if choice in ["1", "2"] and not cli.auth.is_authenticated():
+            # Offer login before accessing a service
+            if not require_authentication(cli):
                 continue
         
         running = handle_menu_choice(choice, cli)
+        
+        # If a service call caused session expiry mid-use, offer re-login
+        if running and choice in ["1", "2"] and not cli.auth.is_authenticated():
+            print("\n⚠️  Your session expired during this operation.")
+            relogin = input("   Log in again now? (y/n): ").strip().lower()
+            if relogin == "y":
+                cli.auth.login()
         
         if running:
             input("\nPress Enter to continue...")
