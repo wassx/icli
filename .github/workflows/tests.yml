@@ -25,5 +25,6 @@ jobs:
       - name: Run tests
         env:
           PYTHONPATH: ${{ github.workspace }}
+          PYTHONUTF8: "1"
         run: |
           for f in tests/test_*.py; do python "$f" || exit 1; done
