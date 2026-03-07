@@ -136,6 +136,10 @@ class DriveModule:
                 print("❌ Could not access current directory")
                 return
             
+            # Fetch children here (fixes NameError: 'children' was only defined
+            # in _show_current_directory and is not in scope here)
+            children = current_node.get_children()
+            
             # Build items list with parent directory
             items = []
             if self.current_path != "/":
@@ -562,13 +566,3 @@ class DriveModule:
         except Exception as e:
             print(f"❌ Error loading files: {str(e)}")
             print("   Please check your internet connection and try again.")
-    
-    def upload_file(self, local_path, remote_path):
-        """Upload a file to iCloud Drive"""
-        print(f"Uploading {local_path} to {remote_path}...")
-        # TODO: Implement actual file upload
-        
-    def download_file(self, remote_path, local_path):
-        """Download a file from iCloud Drive"""
-        print(f"Downloading {remote_path} to {local_path}...")
-        # TODO: Implement actual file download
