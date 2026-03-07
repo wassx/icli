@@ -168,6 +168,11 @@ python main.py drive search --type pdf --min 500 --json
 
 # Files between 1 MB and 10 MB
 python main.py drive search --min 1024 --max 10240 --json
+
+# Download a file
+python main.py drive download /Documents/report.pdf
+python main.py drive download /Documents/report.pdf --output ~/Downloads/report.pdf --json
+# {"ok": true, "local_path": "/home/user/Downloads/report.pdf", "size_bytes": 614400, "size": "600.0 KB"}
 ```
 
 ---
@@ -195,6 +200,11 @@ files = api.list_files(path="/Documents")
 
 results = api.search_files(query="report", file_type="pdf", min_size=500*1024)
 # [{"name": "Q1 report.pdf", "path": "/Documents/Q1 report.pdf", ...}, ...]
+
+# Download
+result = api.download_file("/Documents/report.pdf")
+result = api.download_file("/Documents/report.pdf", local_path="~/Downloads/")
+# {"ok": True, "local_path": "/home/user/Downloads/report.pdf", ...}
 ```
 
 All methods return plain `dict`/`list` objects safe for `json.dumps()`.  
@@ -262,6 +272,8 @@ drive
     --type EXT        Extension filter (pdf, docx, …)
     --min NKB         Minimum size in KB
     --max NKB         Maximum size in KB
+  download PATH       Download a file locally
+    -o, --output FILE Local destination (default: cwd)
 ```
 
 Full reference: [docs/cli-reference.md](docs/cli-reference.md)  

@@ -394,6 +394,12 @@ def run_cli():
                       help="Minimum file size in KB")
     sr_p.add_argument("--max", dest="max_size", type=int, metavar="NKB",
                       help="Maximum file size in KB")
+    dl_p = drv_sub.add_parser("download", parents=[_json],
+                               help="Download a file from iCloud Drive")
+    dl_p.add_argument("remote_path", metavar="PATH",
+                      help="iCloud Drive file path, e.g. /Documents/report.pdf")
+    dl_p.add_argument("-o", "--output", dest="local_path", metavar="FILE",
+                      help="Local destination file or directory (default: current dir)")
 
     args = parser.parse_args()
     use_json = args.json
@@ -464,6 +470,14 @@ def run_cli():
                                file_type=args.file_type,
                                min_size=min_b,
                                max_size=max_b))
+                elif args.drv_cmd == "download":
+                    result = api.download_file(
+                        remote_path=args.remote_path,
+                        local_path=args.local_path,
+                    )
+                    if not result.get("ok"):
+                        die(result.get("error", "Download failed"))
+                    out(result)
 
     except (RuntimeError, ValueError) as exc:
         die(str(exc))

@@ -352,6 +352,77 @@ class DriveModule:
         except Exception:
             return str(raw)
     
+    def download_file(self, remote_path, local_path=None):
+        """Download a file from iCloud Drive to a local path.
+
+        Args:
+            remote_path: Absolute iCloud Drive path, e.g. ``/Documents/report.pdf``.
+            local_path:  Local destination.  Defaults to the file's basename in the
+                         current working directory.
+
+        Returns:
+            dict with keys: ok (bool), local_path (str), size_bytes (int), size (str)
+
+        Raises nothing — returns ``{"ok": False, "error": "…"}`` on failure so
+        callers always get a consistent dict back.
+        """
+        import os
+
+        if not self.auth or not self.auth.is_authenticated():
+            return {"ok": False, "error": "Not authenticated"}
+
+        self.auth.check_session_activity()
+
+        try:
+            drive_service = self.auth.get_drive_service()
+            if not drive_service:
+                return {"ok": False, "error": "Drive service not available"}
+
+            # Traverse to the file
+            parts = [p for p in remote_path.split("/") if p]
+            if not parts:
+                return {"ok": False, "error": "Path is empty"}
+
+            node = drive_service.root
+            for i, part in enumerate(parts):
+                children = node.get_children()
+                found = next((c for c in children if c.name == part), None)
+                if not found:
+                    seg = "/" + "/".join(parts[: i + 1])
+                    return {"ok": False, "error": f"Path not found: {seg}"}
+                node = found
+
+            if node.type == "folder":
+                return {"ok": False, "error": f"{remote_path} is a folder, not a file"}
+
+            # Resolve local destination
+            if not local_path:
+                local_path = node.name
+            local_path = os.path.abspath(local_path)
+
+            # If local_path is a directory, put the file inside it
+            if os.path.isdir(local_path):
+                local_path = os.path.join(local_path, node.name)
+
+            with Spinner(f"Downloading {node.name}"):
+                response = node.open(stream=True)
+                with open(local_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=65536):
+                        if chunk:
+                            f.write(chunk)
+
+            size = os.path.getsize(local_path)
+            return {
+                "ok": True,
+                "local_path": local_path,
+                "size_bytes": size,
+                "size": self._format_size(size),
+            }
+
+        except Exception as e:
+            logger.debug("Download error: %s", e, exc_info=True)
+            return {"ok": False, "error": str(e)}
+
     def search_files(self, query="", file_type=None, min_size=None, max_size=None):
         """
         Search files in iCloud Drive

@@ -233,6 +233,39 @@ medium = api.search_files(min_size=1_048_576, max_size=10_485_760)
 
 ---
 
+### `ICloudAPI.download_file(remote_path, local_path=None) → dict`
+
+Download a file from iCloud Drive to the local filesystem.
+
+```python
+# Download to current directory (keeps original filename)
+result = api.download_file("/Documents/report.pdf")
+# {"ok": True, "local_path": "/home/user/report.pdf", "size_bytes": 614400, "size": "600.0 KB"}
+
+# Download to a specific path
+result = api.download_file("/Documents/report.pdf", local_path="~/Downloads/report.pdf")
+
+# Download into a directory (keeps original filename)
+result = api.download_file("/Documents/report.pdf", local_path="/tmp/")
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `remote_path` | str | Absolute iCloud Drive path, e.g. `"/Documents/report.pdf"` |
+| `local_path` | str \| None | Local file or directory destination (default: file's name in cwd) |
+
+**Result dict:**
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `ok` | bool | `True` on success, `False` on failure |
+| `local_path` | str | Absolute local path of the saved file |
+| `size_bytes` | int | Downloaded file size in bytes |
+| `size` | str | Human-readable size |
+| `error` | str | Present only when `ok` is `False` |
+
+---
+
 ## Error handling pattern
 
 ```python

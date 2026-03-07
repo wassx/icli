@@ -210,6 +210,22 @@ class ICloudAPI:
         )
         return [_clean_file(f) for f in raw]
 
+    def download_file(self, remote_path, local_path=None):
+        """Download a file from iCloud Drive to a local path.
+
+        Args:
+            remote_path: Absolute iCloud Drive path, e.g. ``'/Documents/report.pdf'``.
+            local_path:  Local destination file or directory.  Defaults to the
+                         file's original name in the current working directory.
+
+        Returns dict with keys:
+          ok (bool), local_path (str), size_bytes (int), size (str)
+
+        On failure the dict has ``ok=False`` and an ``error`` key instead.
+        """
+        self._require_auth()
+        return self._drive.download_file(remote_path, local_path)
+
     # ── Internal helpers ──────────────────────────────────────────────────────
 
     def _require_auth(self):

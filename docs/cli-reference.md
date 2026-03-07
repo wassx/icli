@@ -216,6 +216,32 @@ python main.py drive search --min 1024 --max 10240 --json
 
 ---
 
+### `drive download PATH [--output FILE] [--json]`
+
+Download a file from iCloud Drive to the local filesystem.
+
+```bash
+python main.py drive download /Documents/report.pdf
+python main.py drive download /Documents/report.pdf --output ~/Downloads/report.pdf
+python main.py drive download /Photos/vacation.jpg -o ./local.jpg --json
+```
+
+| Argument / Option | Description |
+|-------------------|-------------|
+| `PATH` | Absolute iCloud Drive path to the file |
+| `-o`, `--output FILE` | Local destination file or directory (default: file's original name in cwd) |
+
+**Output fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ok` | bool | `true` on success |
+| `local_path` | str | Absolute path of the downloaded file |
+| `size_bytes` | int | File size in bytes |
+| `size` | str | Human-readable file size |
+
+---
+
 ## `--json` flag
 
 Append `--json` to any leaf command to get machine-readable output on `stdout`.
