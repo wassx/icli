@@ -256,7 +256,7 @@ class MailModule:
         if status != "OK":
             raise RuntimeError(f"Cannot open folder: {folder}")
 
-        status, data = conn.uid("FETCH", uid, "(RFC822)")
+        status, data = conn.uid("FETCH", uid, "(BODY.PEEK[])")
         if status != "OK" or not data or data[0] is None:
             raise ValueError(f"Email UID {uid} not found in {folder}")
 
