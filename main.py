@@ -112,14 +112,17 @@ def handle_menu_choice(choice, cli):
     elif choice == "2":
         print("\n=== iCloud Drive Menu ===")
         print("1) Browse files (interactive tree)")
-        print("2) List files (simple)")
-        print("3) Back to main menu")
+        print("2) Search files")
+        print("3) List files (simple)")
+        print("4) Back to main menu")
         drive_choice = input("\nEnter your choice: ").strip()
         if drive_choice == "1":
             cli.drive.browse_files()
         elif drive_choice == "2":
-            cli.drive.list_files()
+            self._handle_drive_search(cli.drive)
         elif drive_choice == "3":
+            cli.drive.list_files()
+        elif drive_choice == "4":
             return True
     elif choice == "5":
         print("\nExiting iCloud CLI...")
@@ -201,6 +204,76 @@ def main():
         
         if running:
             input("\nPress Enter to continue...")
+    
+    return False
+
+def _handle_drive_search(self, drive_module):
+    """Handle iCloud Drive file search with interactive prompts"""
+    print("\n=== iCloud Drive Search ===")
+    print("🔍 Search your iCloud Drive files")
+    print("Leave fields blank to skip filters")
+    print("=" * 60)
+    
+    # Get search criteria from user
+    query = input("\n🔎 Search text (filename contains): ").strip()
+    file_type = input("📄 File type (e.g., pdf, docx): ").strip() or None
+    
+    # Get size constraints
+    min_size_input = input("💾 Min size (KB, e.g., 100 for 100KB): ").strip()
+    max_size_input = input("💾 Max size (KB, e.g., 1024 for 1MB): ").strip()
+    
+    # Convert size inputs to bytes
+    min_size = None
+    max_size = None
+    
+    if min_size_input:
+        try:
+            min_size = int(min_size_input) * 1024  # Convert KB to bytes
+        except ValueError:
+            print(f"⚠️  Invalid min size: '{min_size_input}'. Using no minimum.")
+    
+    if max_size_input:
+        try:
+            max_size = int(max_size_input) * 1024  # Convert KB to bytes
+        except ValueError:
+            print(f"⚠️  Invalid max size: '{max_size_input}'. Using no maximum.")
+    
+    # Display search criteria
+    print("\n🔍 Searching with criteria:")
+    print(f"   Text: '{query}'" if query else "   Text: (any)")
+    print(f"   Type: {file_type}" if file_type else "   Type: (any)")
+    print(f"   Size: {min_size//1024}KB - {max_size//1024}KB" if min_size or max_size else "   Size: (any)")
+    print("=" * 60)
+    
+    # Perform the search
+    results = drive_module.search_files(
+        query=query,
+        file_type=file_type,
+        min_size=min_size,
+        max_size=max_size
+    )
+    
+    # Offer to navigate to search results
+    if results:
+        print("\n📂 Search complete. Options:")
+        print("1. Browse to a search result")
+        print("2. Back to drive menu")
+        
+        choice = input("\nEnter your choice: ").strip()
+        if choice == "1":
+            result_choice = input("Enter result number (1-20): ").strip()
+            if result_choice.isdigit():
+                result_index = int(result_choice) - 1
+                if 0 <= result_index < len(results):
+                    selected_file = results[result_index]
+                    if selected_file and 'path' in selected_file:
+                        # Navigate to the file's directory
+                        drive_module.current_path = selected_file['path'].rsplit('/', 1)[0]
+                        print(f"📁 Navigated to: {drive_module.current_path}")
+                        # Show the directory contents
+                        drive_module.browse_files()
+                else:
+                    print("❌ Invalid result number")
 
 if __name__ == "__main__":
     main()

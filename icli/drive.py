@@ -325,6 +325,196 @@ class DriveModule:
             size_bytes /= 1024.0
         return f"{size_bytes:.1f} PB"
     
+    def search_files(self, query="", file_type=None, min_size=None, max_size=None):
+        """
+        Search files in iCloud Drive
+        
+        Args:
+            query: Search text to match in filenames
+            file_type: Optional file extension to filter by (e.g., 'pdf', 'docx')
+            min_size: Optional minimum file size in bytes
+            max_size: Optional maximum file size in bytes
+            
+        Returns:
+            List of matching files with metadata
+        """
+        if not self.auth or not self.auth.is_authenticated():
+            print("❌ Not authenticated. Please log in to access your iCloud Drive.")
+            return []
+        
+        # Check session activity
+        self.auth.check_session_activity()
+        
+        try:
+            drive_service = self.auth.get_drive_service()
+            if not drive_service:
+                print("❌ Drive service not available")
+                return []
+            
+            print(f"🔍 Searching iCloud Drive for '{query}'...")
+            
+            # Start from root and search recursively
+            root_node = drive_service.root
+            if not root_node:
+                print("❌ Could not access iCloud Drive root")
+                return []
+            
+            # Search through the entire drive
+            matching_files = self._search_node_recursive(
+                root_node, 
+                query, 
+                file_type, 
+                min_size, 
+                max_size
+            )
+            
+            if not matching_files:
+                print(f"🔍 No files found matching your search criteria")
+                return []
+            
+            print(f"🔍 Found {len(matching_files)} matching files:")
+            print("=" * 80)
+            
+            for i, file_info in enumerate(matching_files[:20], 1):  # Show first 20
+                self._display_search_result(file_info, i)
+            
+            if len(matching_files) > 20:
+                print(f"\n📝 Showing first 20 of {len(matching_files)} results")
+            
+            print("=" * 80)
+            return matching_files
+            
+        except Exception as e:
+            print(f"❌ Error searching files: {str(e)}")
+            print("   Please check your internet connection and try again.")
+            return []
+    
+    def _search_node_recursive(self, node, query, file_type, min_size, max_size):
+        """
+        Recursively search through a directory node
+        
+        Args:
+            node: Current DriveNode to search
+            query: Search query string
+            file_type: File extension filter
+            min_size: Minimum size filter
+            max_size: Maximum size filter
+            
+        Returns:
+            List of matching files
+        """
+        matching_files = []
+        
+        try:
+            # Get children of current node
+            children = node.get_children()
+            
+            for child in children:
+                # Skip directories for now (we'll recurse into them)
+                if child.type == "folder":
+                    # Recursively search subdirectories
+                    subdir_matches = self._search_node_recursive(
+                        child, query, file_type, min_size, max_size
+                    )
+                    matching_files.extend(subdir_matches)
+                else:
+                    # Check if this file matches search criteria
+                    if self._file_matches_criteria(child, query, file_type, min_size, max_size):
+                        file_info = self._get_file_info(child)
+                        matching_files.append(file_info)
+            
+            return matching_files
+            
+        except Exception as e:
+            print(f"⚠️  Error searching directory {getattr(node, 'name', 'unknown')}: {str(e)}")
+            return []
+    
+    def _file_matches_criteria(self, file_node, query, file_type, min_size, max_size):
+        """
+        Check if a file matches all search criteria
+        """
+        try:
+            # Check query match (filename contains query text)
+            if query and not query.lower() in file_node.name.lower():
+                return False
+            
+            # Check file type match
+            if file_type:
+                file_ext = self._get_file_extension(file_node.name)
+                if file_ext.lower() != file_type.lower():
+                    return False
+            
+            # Check size constraints
+            file_size = self._get_node_size(file_node)
+            if min_size is not None and file_size < min_size:
+                return False
+            if max_size is not None and file_size > max_size:
+                return False
+            
+            return True
+            
+        except Exception as e:
+            print(f"⚠️  Error checking file criteria: {str(e)}")
+            return False
+    
+    def _get_file_extension(self, filename):
+        """Extract file extension from filename"""
+        try:
+            # Handle filenames with multiple dots
+            if '.' in filename:
+                return filename.rsplit('.', 1)[1].lower()
+            return ''
+        except Exception:
+            return ''
+    
+    def _get_file_info(self, file_node):
+        """Extract comprehensive file information for display"""
+        try:
+            path = self._get_node_path(file_node)
+            size = self._get_node_size(file_node)
+            
+            return {
+                'name': file_node.name,
+                'path': path,
+                'size': size,
+                'type': file_node.type,
+                'node': file_node,
+                'extension': self._get_file_extension(file_node.name),
+                'formatted_size': self._format_size(size)
+            }
+        except Exception as e:
+            print(f"⚠️  Error getting file info: {str(e)}")
+            return None
+    
+    def _get_node_path(self, node):
+        """Get the full path of a node"""
+        try:
+            # This is a simplified approach
+            # In a full implementation, we'd track the path during recursion
+            return f"{self.current_path}/{node.name}"
+        except Exception:
+            return node.name
+    
+    def _display_search_result(self, file_info, index):
+        """Display a search result in a user-friendly format"""
+        try:
+            size_str = file_info['formatted_size']
+            extension = file_info['extension'].upper() if file_info['extension'] else ''
+            
+            print(f"{index:2d}. 📄 {file_info['name']}")
+            print(f"     📍 {file_info['path']}")
+            print(f"     💾 {size_str} • {extension}")
+            
+            # Add additional info if available
+            if hasattr(file_info['node'], 'date_created'):
+                print(f"     📅 Created: {file_info['node'].date_created}")
+            
+        except Exception as e:
+            print(f"⚠️  Error displaying search result: {str(e)}")
+    
+    def list_files(self, path="/"):
+        """List files in iCloud Drive (legacy method)"""
+=======
     def list_files(self, path="/"):
         """List files in iCloud Drive (legacy method)"""
         if not self.auth or not self.auth.is_authenticated():
