@@ -24,76 +24,53 @@ def handle_menu_choice(choice, cli):
         if cli.auth.is_authenticated():
             print("\n1) Logout")
             print("2) Account information")
-            print("3) Refresh session")
+            print("3) Extend session timer")
             print("4) Back to main menu")
+            
+            auth_choice = input("\nEnter your choice (1-4): ").strip()
+            
+            if auth_choice == "1":
+                cli.auth.logout()
+                print("\n✅ You have been logged out.")
+            elif auth_choice == "2":
+                print("\n=== Account Information ===")
+                print(f"Apple ID:  {cli.auth.apple_id or 'Unknown'}")
+                if cli.auth.session_expiry:
+                    remaining_secs = max(0, cli.auth.session_expiry - time.time())
+                    remaining_h = int(remaining_secs // 3600)
+                    remaining_m = int((remaining_secs % 3600) // 60)
+                    print(f"Session:   Active ({remaining_h}h {remaining_m:02d}m remaining)")
+                else:
+                    print("Session:   Active")
+                print("Access:    Read-only")
+            elif auth_choice == "3":
+                if cli.auth.refresh_session():
+                    print("✅ Session timer extended for another 24 hours.")
+                else:
+                    print("❌ Could not extend session timer.")
+            elif auth_choice == "4":
+                return True
+            else:
+                print("❌ Invalid choice. Please enter 1-4.")
         else:
             print("\n1) Login to iCloud")
             print("2) Back to main menu")
-        
-        auth_choice = input("\nEnter your choice: ").strip()
-        
-        if auth_choice == "1":
-            if cli.auth.is_authenticated():
-                # Logout
-                cli.auth.logout()
-                print("\n✅ You have been logged out.")
-                print("   Switched to demo mode with mock data.")
-            else:
-                # Login
+            
+            auth_choice = input("\nEnter your choice (1-2): ").strip()
+            
+            if auth_choice == "1":
                 print("\n=== iCloud Login ===")
-                print("Secure access to your iCloud services")
                 print("• Your credentials are handled securely")
                 print("• Passwords can be saved in system keyring (optional)")
                 print("• Two-factor authentication supported")
-                print("\n📋 Requirements:")
-                print("• Apple ID email address")
-                print("• Apple ID password")
-                print("• 2FA code if enabled on your account")
-                
                 if cli.auth.login():
-                    print("\nLogin successful!")
-                    print("   You now have access to your real iCloud data.")
-                    print("   All modules will load data from your iCloud account.")
+                    print("\n✅ Login successful!")
                 else:
-                    print("\nLogin cancelled or failed.")
-                    print("   Continuing in demo mode.")
-        elif auth_choice == "2":
-            if cli.auth.is_authenticated():
-                # Show account info
-                print("\n=== Account Information ===")
-                print("Authentication: Active")
-                print("Email: " + cli.auth.apple_id if cli.auth.apple_id else "Unknown")
-                print("Session: Secure")
-                
-                # Show session status
-                if cli.auth.session_expiry:
-                    remaining = (cli.auth.session_expiry - time.time()) / 3600
-                    print(f"Session expires in: {remaining:.1f} hours")
-                
-                print("\nData Access:")
-                print("• Calendar: Real iCloud events")
-                print("• Drive: Real iCloud files")
-                print("\nSession Management:")
-                print("• Read-only access (no modifications)")
-                print("• Secure connection")
-                print("• Automatic reconnection")
-            else:
-                print("\nPlease log in to access your iCloud data.")
-                print("Authentication is required for all features.")
-        elif auth_choice == "3":
-            if cli.auth.is_authenticated():
-                # Refresh session
-                if cli.auth.refresh_session():
-                    print("Session refreshed successfully!")
-                else:
-                    print("Session refresh failed.")
-                input("\nPress Enter to continue...")
-            else:
+                    print("\n❌ Login cancelled or failed.")
+            elif auth_choice == "2":
                 return True
-        elif auth_choice == "4" and cli.auth.is_authenticated():
-            return True
-        else:
-            print("Invalid choice")
+            else:
+                print("❌ Invalid choice. Please enter 1-2.")
     elif choice == "4":
         print("\nGoodbye!")
         return False
@@ -127,41 +104,36 @@ def handle_menu_choice(choice, cli):
             cli.drive.list_files()
         elif drive_choice == "4":
             return True
-    elif choice == "5":
-        print("\nExiting iCloud CLI...")
-        return False
+
     else:
         print("\nInvalid choice. Please try again.")
     
     return True
 
 def require_authentication(cli):
-    """Handle authentication requirement - demo mode removed"""
+    """Prompt the user to log in before accessing a service."""
     print("\n❌ Authentication Required")
     print("=" * 40)
     print("To access iCloud services, please log in first.")
     print("\n1) Login to iCloud")
     print("2) Exit")
     
-    choice = input("\nEnter your choice (1-2): ").strip()
-    
-    if choice == "1":
-        # Direct to login
-        print("\n=== iCloud Login ===")
-        if cli.auth.login():
-            print("\nLogin successful!")
-            print("   You now have access to your real iCloud data.")
-            print("   All modules will load data from your iCloud account.")
-            return True
-        else:
-            print("\nLogin cancelled or failed.")
+    while True:
+        choice = input("\nEnter your choice (1-2): ").strip()
+        
+        if choice == "1":
+            print("\n=== iCloud Login ===")
+            if cli.auth.login():
+                print("\n✅ Login successful!")
+                return True
+            else:
+                print("\n❌ Login cancelled or failed.")
+                return False
+        elif choice == "2":
+            print("\nGoodbye!")
             return False
-    elif choice == "2":
-        print("\nGoodbye!")
-        return False
-    else:
-        print("\nInvalid choice. Please try again.")
-        return require_authentication(cli)
+        else:
+            print("❌ Invalid choice. Please enter 1 or 2.")
 
 def main():
     """Main program loop with improved UX"""
@@ -191,7 +163,7 @@ def main():
     
     while running:
         show_main_menu(cli)
-        choice = input("\nEnter your choice (1-5): ").strip()
+        choice = input("\nEnter your choice (1-4): ").strip()
         
         # Check if authentication is needed for this choice
         if choice in ["1", "2", "3"] and not cli.auth.is_authenticated():
