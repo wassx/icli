@@ -21,7 +21,7 @@ def test_main_menu():
     
     output = captured_output.getvalue()
     assert "=== iCloud CLI" in output
-    assert "1) Mail" in output
+    assert "1) iCloud Mail" in output
     assert "2) Calendar" in output
     assert "3) iCloud Drive" in output
     assert "4) Authentication" in output

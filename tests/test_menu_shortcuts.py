@@ -1,33 +1,47 @@
 #!/usr/bin/env python3
-"""Test menu shortcuts after mail removal"""
+"""Test that the main menu in main.py matches the expected structure."""
+import os
+import sys
 
 def test_menu_shortcuts():
-    """Verify that menu shortcuts match the displayed options"""
+    """Verify that menu shortcuts in show_main_menu() match handle_menu_choice()."""
     print("=== Testing Menu Shortcuts ===\n")
-    
-    # Expected menu structure after mail removal
-    main_menu_options = {
-        "1": "Calendar",
-        "2": "iCloud Drive", 
-        "3": "Authentication",
-        "4": "Exit"
-    }
-    
-    print("Main Menu Options:")
-    for shortcut, description in main_menu_options.items():
-        print(f"  {shortcut}) {description}")
-    
-    print("\n✅ Menu shortcuts are correctly mapped:")
-    print("  - Shortcut '1' opens Calendar menu")
-    print("  - Shortcut '2' opens iCloud Drive menu")
-    print("  - Shortcut '3' opens Authentication menu")
-    print("  - Shortcut '4' exits the application")
-    
-    # Test that the code matches the menu
-    print("\n🔍 Code verification:")
-    print("  - elif choice == '1': # Calendar ✅")
-    print("  - elif choice == '2': # iCloud Drive ✅")
-    print("  - elif choice == '3': # Authentication ✅")
+
+    # Read main.py source
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    main_src = open(os.path.join(root, "main.py")).read()
+
+    # Expected items present in the show_main_menu print statements
+    expected_menu_items = [
+        '"1) iCloud Mail"',
+        '"2) Calendar"',
+        '"3) iCloud Drive"',
+        '"4) Authentication"',
+        '"5) Exit"',
+    ]
+    # Expected handlers in handle_menu_choice
+    expected_handlers = [
+        'choice == "4"',   # Authentication
+        'choice == "5"',   # Exit
+        'choice == "1"',   # Mail
+        'choice == "2"',   # Calendar
+        'choice == "3"',   # Drive
+    ]
+
+    errors = []
+    for item in expected_menu_items:
+        if item not in main_src:
+            errors.append(f"Missing menu item: {item}")
+    for handler in expected_handlers:
+        if handler not in main_src:
+            errors.append(f"Missing handler: {handler}")
+
+    if errors:
+        for e in errors:
+            print(f"  ❌ {e}")
+        sys.exit(1)
+
+    print("✅ All menu items present and handlers match.")
     print("  - elif choice == '4': # Exit ✅")
     
     print("\n🎉 All menu shortcuts are correctly implemented!")

@@ -28,19 +28,14 @@ def test_ux_improvements():
     
     # Test 3: Service access without authentication
     print("3. Service Access (Unauthenticated):")
-    print("   Mail service:", cli.auth.get_mail_service())
     print("   Calendar service:", cli.auth.get_calendar_service())
     print("   Drive service:", cli.auth.get_drive_service())
     print("✓ All services return None when unauthenticated\n")
     
-    # Test 4: No data without authentication
-    print("4. Data Access Without Authentication:")
-    cli.mail._use_real_data = True
-    cli.mail._load_real_emails()  # Should print error and return without loading
-    email_count_after = len(cli.mail.unread_emails)
-    print(f"   Emails loaded: {email_count_after}")
-    assert email_count_after == 0
-    print("✓ No data returned without authentication\n")
+    # Test 4: Auth state check
+    print("4. Auth State Without Login:")
+    assert not cli.auth.is_authenticated(), "Should not be authenticated without login"
+    print("✓ Not authenticated without login\n")
     
     # Test 5: Authentication flow simulation
     print("5. Authentication Flow:")

@@ -1,55 +1,39 @@
 #!/usr/bin/env python3
-"""Test to verify menu shortcuts are working correctly"""
+"""Verify that sub-menu handlers in main.py list the correct options."""
+import os
+import sys
 
 def test_menu_shortcuts():
-    """Verify menu shortcuts match displayed options"""
+    """Verify sub-menu print statements are present in main.py."""
     print("=== Menu Shortcut Verification ===\n")
-    
-    # Current menu structure
-    main_menu = {
-        "1": "Calendar",
-        "2": "iCloud Drive",
-        "3": "Authentication", 
-        "4": "Exit"
-    }
-    
-    calendar_menu = {
-        "1": "Browse events (interactive)",
-        "2": "List calendars",
-        "3": "List upcoming events",
-        "4": "Back to main menu"
-    }
-    
-    drive_menu = {
-        "1": "Browse files (interactive tree)",
-        "2": "List files (simple)",
-        "3": "Back to main menu"
-    }
-    
-    print("✅ Main Menu Shortcuts:")
-    for shortcut, description in main_menu.items():
-        print(f"  {shortcut}) {description}")
-    
-    print("\n✅ Calendar Menu Shortcuts:")
-    for shortcut, description in calendar_menu.items():
-        print(f"  {shortcut}) {description}")
-    
-    print("\n✅ Drive Menu Shortcuts:")
-    for shortcut, description in drive_menu.items():
-        print(f"  {shortcut}) {description}")
-    
-    print("\n🎉 All menu shortcuts are correctly mapped!")
-    print("\nVerification:")
-    print("• Main menu: 1=Calendar, 2=Drive, 3=Auth, 4=Exit ✅")
-    print("• Calendar menu: 1=Browse, 2=List calendars, 3=List events, 4=Back ✅")
-    print("• Drive menu: 1=Browse, 2=List files, 3=Back ✅")
-    
-    # Test that code matches menu
-    print("\n🔍 Code Verification:")
-    print("• elif choice == '1': # Calendar ✅")
-    print("• elif choice == '2': # iCloud Drive ✅")
-    print("• elif choice == '3': # Authentication ✅")
-    print("• elif choice == '4': # Exit ✅")
+
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    main_src = open(os.path.join(root, "main.py")).read()
+
+    checks = [
+        # Calendar sub-menu
+        ('"1) Browse events (interactive)"', "Calendar option 1"),
+        ('"2) List calendars"', "Calendar option 2"),
+        ('"3) List upcoming events"', "Calendar option 3"),
+        # Drive sub-menu
+        ('"1) Browse files (interactive tree)"', "Drive option 1"),
+        ('"2) Search files"', "Drive option 2"),
+        # Mail sub-menu
+        ('"1) Inbox overview"', "Mail option 1"),
+        ('"2) Browse folders"', "Mail option 2"),
+    ]
+
+    errors = []
+    for snippet, label in checks:
+        if snippet not in main_src:
+            errors.append(f"Missing: {label} ({snippet})")
+
+    if errors:
+        for e in errors:
+            print(f"  ❌ {e}")
+        sys.exit(1)
+
+    print("✅ All sub-menu options present in main.py.")
 
 if __name__ == "__main__":
     test_menu_shortcuts()

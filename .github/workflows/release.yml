@@ -37,8 +37,10 @@ jobs:
           pip install pyinstaller
 
       - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
-          for f in tests/test_*.py; do python "$f"; done
+          for f in tests/test_*.py; do python "$f" || exit 1; done
         shell: bash
 
       - name: Build binary

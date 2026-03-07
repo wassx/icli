@@ -17,15 +17,16 @@ def test_drive_api():
             if not attr.startswith('_') and callable(getattr(DriveService, attr)):
                 print(f"  {attr}")
         
-        # Check how root() works
-        print("\nChecking root() method...")
-        import inspect
-        root_method = getattr(DriveService, 'root', None)
-        if root_method:
-            sig = inspect.signature(root_method)
-            print(f"root() signature: {sig}")
+        # Check how root works
+        print("\nChecking root attribute...")
+        root_attr = getattr(DriveService, 'root', None)
+        if root_attr is None:
+            print("No root attribute found")
+        elif isinstance(root_attr, property):
+            print("root is a @property (access as instance.root, not instance.root())")
         else:
-            print("No root() method found")
+            import inspect
+            print(f"root signature: {inspect.signature(root_attr)}")
         
         # Test with a mock approach
         print("\n📝 API Usage Notes:")
