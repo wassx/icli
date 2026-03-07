@@ -13,7 +13,7 @@ setup(
         ],
     },
     install_requires=[
-        'pyicloud>=1.0.1',
+        'pyicloud>=2.4.1',
         'requests>=2.31.0',
         'keyring>=24.2.0',
     ],
