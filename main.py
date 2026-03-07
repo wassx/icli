@@ -24,9 +24,9 @@ def show_main_menu(cli):
     """Display the main menu and handle user input"""
     auth_status = "🔒 Logged in" if cli.auth.is_authenticated() else "🔓 Not logged in"
     print(f"\n=== iCloud CLI - {auth_status} ===")
-    print("1) Calendar")
-    print("2) iCloud Drive")
-    print("3) iCloud Mail")
+    print("1) iCloud Mail")
+    print("2) Calendar")
+    print("3) iCloud Drive")
     print("4) Authentication")
     print("5) Exit")
     print("\n" + separator("-"))
@@ -92,6 +92,18 @@ def handle_menu_choice(choice, cli):
         print("\nGoodbye!")
         return False
     elif choice == "1":
+        print("\n=== iCloud Mail ===")
+        print("1) Inbox overview")
+        print("2) Browse folders")
+        print("3) Back to main menu")
+        mail_choice = input("\nEnter your choice (1-3): ").strip()
+        if mail_choice == "1":
+            cli.mail.show_inbox()
+        elif mail_choice == "2":
+            cli.mail.browse_folders()
+        elif mail_choice == "3":
+            return True
+    elif choice == "2":
         print("\n=== Calendar Menu ===")
         print("1) Browse events (interactive)")
         print("2) List calendars")
@@ -109,7 +121,7 @@ def handle_menu_choice(choice, cli):
             cli.calendar.show_calendar_grid()
         elif calendar_choice == "5":
             return True
-    elif choice == "2":
+    elif choice == "3":
         print("\n=== iCloud Drive Menu ===")
         print("1) Browse files (interactive tree)")
         print("2) Search files")
@@ -123,18 +135,6 @@ def handle_menu_choice(choice, cli):
         elif drive_choice == "3":
             cli.drive.list_files()
         elif drive_choice == "4":
-            return True
-    elif choice == "3":
-        print("\n=== iCloud Mail ===")
-        print("1) Inbox overview")
-        print("2) Browse folders")
-        print("3) Back to main menu")
-        mail_choice = input("\nEnter your choice (1-3): ").strip()
-        if mail_choice == "1":
-            cli.mail.show_inbox()
-        elif mail_choice == "2":
-            cli.mail.browse_folders()
-        elif mail_choice == "3":
             return True
 
     else:
@@ -187,7 +187,7 @@ def main():
         if cli.auth.try_resume_session():
             print(f"✅ Session resumed for {cli.auth.apple_id}")
         else:
-            print("ℹ️  Ready — log in via Authentication (option 3) to access your iCloud data.")
+            print("ℹ️  Ready — log in via Authentication (option 4) to access your iCloud data.")
     
     running = True
     
