@@ -482,6 +482,8 @@ examples/         demo.py, quickstart.py
 - **Read-only** — no uploads, edits, or deletions
 - **Unofficial API** — Apple's iCloud endpoints are undocumented and may change
 - **2FA** — first login requires an interactive terminal; subsequent runs are silent
+- **Reminders — iCloud lists only** — lists stored *On My iPhone/iPad/Mac* (local-only) and built-in smart views (Today, Scheduled, Flagged, All) are not CalDAV collections and cannot be accessed remotely. Only lists synced to iCloud appear.
+- **Reminders — shared list names** — iCloud's CalDAV layer appends a `⚠️` suffix to shared and family-shared list names. iCLI strips this automatically so names match what the Reminders app displays.
 
 ---
 
