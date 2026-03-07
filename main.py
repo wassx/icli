@@ -6,10 +6,10 @@ from icli import iCloudCLI
 from icli.utils import separator, Spinner
 
 BANNER = r"""
- _  ___  _   ___ 
-(_)/ __|| |  |_ _|
-| || (__ |_  | | 
-|_| \___||___|___|
+ _  ___ _    ___ 
+(_)/ __| |  |_ _|
+| | (__| |__ | | 
+|_|\___|____|___|
 """
 
 def pause():
