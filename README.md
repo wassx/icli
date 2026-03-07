@@ -1,5 +1,11 @@
 # iCLI
 
+[![Build & Release](https://github.com/wassx/icli/actions/workflows/release.yml/badge.svg)](https://github.com/wassx/icli/actions/workflows/release.yml)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/wassx/icli/actions/workflows/release.yml)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Read-only](https://img.shields.io/badge/iCloud-read--only-orange)](https://github.com/wassx/icli#disclaimer)
+
 ```
  _  ___ _    ___ 
 (_)/ __| |  |_ _|
