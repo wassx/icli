@@ -2,6 +2,36 @@
 
 A command-line interface for interacting with iCloud services including Calendar and iCloud Drive.
 
+## ⚠️ IMPORTANT DISCLAIMER
+
+**NO LIABILITY OR GUARANTEE**
+
+This software is provided "AS IS" without any warranties, express or implied. The developers, contributors, and maintainers of this project **accept no liability** for:
+
+- **Data loss or corruption** - Use at your own risk
+- **Security issues** - Your iCloud credentials are your responsibility
+- **API changes** - Apple may change iCloud APIs without notice
+- **Service disruptions** - iCloud service availability is beyond our control
+- **Legal compliance** - Ensure your use complies with Apple's Terms of Service
+
+**YOU ARE SOLELY RESPONSIBLE** for:
+
+✅ Backing up your data before use
+✅ Securing your Apple ID credentials
+✅ Complying with Apple's Terms of Service
+✅ Understanding the risks of third-party iCloud access
+✅ Any consequences of using this software
+
+**RECOMMENDED PRECAUTIONS:**
+
+1. **Use a test Apple ID first** - Try with non-critical data
+2. **Enable two-factor authentication** - Protect your account
+3. **Review Apple's security policies** - Understand the risks
+4. **Use in a controlled environment** - Not for production critical data
+5. **Monitor for API changes** - Apple may break functionality
+
+**By using this software, you acknowledge and accept these terms.**
+
 ## 🚀 Quick Start
 
 ### **Recommended: Use Virtual Environment**
